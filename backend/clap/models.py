@@ -1,0 +1,35 @@
+from django.db import models
+from users.models import UsersCustom
+# Create your models here.
+
+
+class caja(models.Model):
+     
+        id = models.AutoField(primary_key=True)
+        price = models.DecimalField(max_digits=10, decimal_places=2)
+        stock = models.IntegerField(default=0)
+        date = models.DateTimeField(auto_now_add=True)
+
+        @property
+        def sold(self):
+                return cajaPersona.objects.filter(cajaid=self).count()
+
+        def __str__(self):
+                return str(self.id)
+        
+class cajaPersona(models.Model):
+    
+        id = models.AutoField(primary_key=True)
+        cajaid = models.ForeignKey(caja, on_delete=models.CASCADE)
+        user = models.ForeignKey(UsersCustom, on_delete=models.CASCADE)
+        date = models.DateTimeField(auto_now_add=True)
+        delivered = models.BooleanField(default=False)
+        payment_method = models.CharField(max_length=50, blank=True, null=True)
+        amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+        reference = models.CharField(max_length=100, blank=True, null=True)
+        img = models.ImageField(upload_to='caja_images/', blank=True, null=True)
+        moneda = models.CharField(max_length=10, default='Bs')
+        payed = models.BooleanField(default=False)
+        
+        def __str__(self):
+                return f"{self.user.username} - {self.cajaid.id} - {self.date}"
