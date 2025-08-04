@@ -1,0 +1,29 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-color);
+}
+
+.layout__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.layout__content {
+  flex: 1;
+  padding: var(--spacing-lg) var(--spacing-xl);
+}
+
+@media (max-width: 768px) {
+  .layout__content {
+    padding: var(--spacing) var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .layout__content {
+    padding: var(--spacing-sm) var(--spacing);
+  }
+}

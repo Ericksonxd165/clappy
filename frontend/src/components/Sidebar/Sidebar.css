@@ -1,0 +1,172 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 16rem;
+  background-color: var(--surface-color);
+  border-right: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(-100%);
+  transition: all var(--transition-slow);
+  z-index: 50;
+}
+
+.sidebar--mobile-open {
+  transform: translateX(0);
+}
+
+.sidebar--collapsed {
+  width: 4rem;
+}
+
+.sidebar__overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+}
+
+.sidebar__mobile-toggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 60;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.sidebar__mobile-toggle:hover {
+  background-color: var(--hover-color);
+}
+
+.sidebar__mobile-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--text-primary);
+}
+
+.sidebar__content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar__logo {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.sidebar__toggle {
+  padding: var(--spacing-xs);
+  border-radius: var(--radius);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--transition);
+  display: none;
+}
+
+.sidebar__toggle:hover {
+  background-color: var(--hover-color);
+}
+
+.sidebar__toggle-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--text-secondary);
+}
+
+.sidebar__nav {
+  flex: 1;
+  padding: var(--spacing);
+}
+
+.sidebar__menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.sidebar__menu-item {
+  /* No additional styles needed */
+}
+
+.sidebar__menu-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+  padding: var(--spacing);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: all var(--transition);
+}
+
+.sidebar__menu-link:hover {
+  background-color: var(--hover-color);
+  color: var(--text-primary);
+}
+
+.sidebar__menu-link--active {
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  box-shadow: var(--shadow-md);
+}
+
+.sidebar__menu-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.sidebar__menu-label {
+  font-weight: 500;
+}
+
+.sidebar__footer {
+  padding: var(--spacing);
+  border-top: 1px solid var(--border-color);
+}
+
+.sidebar__footer-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .sidebar {
+    position: static;
+    transform: translateX(0);
+  }
+
+  .sidebar__mobile-toggle {
+    display: none;
+  }
+
+  .sidebar__toggle {
+    display: block;
+  }
+
+  .sidebar--collapsed .sidebar__menu-link {
+    justify-content: center;
+  }
+}

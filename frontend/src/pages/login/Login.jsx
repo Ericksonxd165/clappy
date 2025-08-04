@@ -1,7 +1,7 @@
 import { useState , useEffect } from 'react';
-import api from '../api/users.api';
+import api from '../../api/users.api';
 import { useNavigate , Link } from 'react-router-dom';
-import { getCurrentUser } from '../api/users.api';
+import { getCurrentUser } from '../../api/users.api';
 
 export default function Login() {
   const [data, setData] = useState({ username: '', password: '' });
