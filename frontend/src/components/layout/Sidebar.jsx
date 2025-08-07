@@ -31,7 +31,7 @@ const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed left-0 top-0 h-full w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out z-50
+         absolute left-0 top-0 h-120 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out z-50
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:z-auto
       `}>

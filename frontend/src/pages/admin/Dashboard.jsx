@@ -17,8 +17,8 @@ const ClientDashboard = () => {
       <div className="space-y-6">
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">¡Bienvenido a Caja Clap!</h1>
-          <p className="text-red-100">Gestiona tus pagos de cajas de manera fácil y segura</p>
+          <h1 className="text-2xl font-bold mb-2">¡Bienvenido a Clappy!</h1>
+          <p className="text-red-100">Gestiona tus pagos de caja clap de manera fácil y segura</p>
         </div>
 
         {/* Stats Cards */}

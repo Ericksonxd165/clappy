@@ -20,10 +20,10 @@ const Header = ({ onMenuToggle, isAdmin = false }) => {
           
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CC</span>
+              <span className="text-white font-bold text-sm">CL</span>
             </div>
             <h1 className="text-xl font-bold text-gray-900">
-              Caja Clap {isAdmin && <span className="text-red-600">Admin</span>}
+              Clappy {isAdmin && <span className="text-red-600">Admin</span>}
             </h1>
           </div>
         </div>
