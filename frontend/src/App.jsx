@@ -1,26 +1,71 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './pages/login/Login';
-import Register from './pages/register/Register';
-import Tables from "./pages/Tables/Tables";
-import Forms from "./pages/Forms/Forms";
-import Analytics from "./pages/Analytics/Analytics";
-import Dashboard from "./pages/dashboard/Dashboard";
-import Layout from './components/layout/Layout';
-import "./styles/globals.css";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useState, createContext, useContext } from 'react'
 
-export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/tables" element={<Tables />} />
-          <Route path="/forms" element={<Forms />} />
-          <Route path="/analytics" element={<Analytics />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
+// Client Pages
+import ClientDashboard from './pages/client/Dashboard'
+import ClientPayment from './pages/client/Payment'
+import ClientProfile from './pages/client/Profile'
+import ClientLogin from './pages/client/Login'
+import ClientRegister from './pages/client/Register'
+import ClientForgotPassword from './pages/client/ForgotPassword'
+
+// Admin Pages
+import AdminDashboard from './pages/admin/Dashboard'
+import AdminPaymentsList from './pages/admin/PaymentsList'
+import AdminStock from './pages/admin/Stock'
+
+// Context for authentication
+const AuthContext = createContext()
+
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
 }
+
+function App() {
+  const [user, setUser] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  const login = (userData) => {
+    setUser(userData)
+    setIsAuthenticated(true)
+  }
+
+  const logout = () => {
+    setUser(null)
+    setIsAuthenticated(false)
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<ClientLogin />} />
+            <Route path="/register" element={<ClientRegister />} />
+            <Route path="/forgot-password" element={<ClientForgotPassword />} />
+            
+            {/* Client Routes */}
+            <Route path="/dashboard" element={<ClientDashboard />} />
+            <Route path="/payment" element={<ClientPayment />} />
+            <Route path="/profile" element={<ClientProfile />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/payments" element={<AdminPaymentsList />} />
+            <Route path="/admin/stock" element={<AdminStock />} />
+            
+            {/* Default redirect */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthContext.Provider>
+  )
+}
+
+export default App
