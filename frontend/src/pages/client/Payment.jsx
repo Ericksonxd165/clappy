@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Layout from '../../components/Layout/Layout'
+import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
