@@ -1,19 +1,35 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate} from 'react-router-dom'
 import { useAuth } from '../../App'
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
-
+import api from '../../api/users.api'
 const ClientLogin = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
+
+  const navigate = useNavigate();
   
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await getCurrentUser();
+        setUser(res.data);
+        navigate('/dashboard');
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        }
+      }
+      fetchUser();
+  }, [navigate]);
+
+
   const { login } = useAuth()
 
   const handleInputChange = (e) => {
@@ -34,10 +50,9 @@ const ClientLogin = () => {
   const validateForm = () => {
     const newErrors = {}
     
-    if (!formData.email) {
-      newErrors.email = 'El email es requerido'
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'El email no es válido'
+    if (!formData.username) {
+   
+      newErrors.username = 'El usuario no es válido'
     }
     
     if (!formData.password) {
@@ -61,22 +76,17 @@ const ClientLogin = () => {
     setIsLoading(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock login success
-      login({
-        id: 1,
-        name: 'Usuario Demo',
-        email: formData.email,
-        role: 'client'
-      })
-      
+      // API call
+       const res = await api.post('/login/', formData);
+      localStorage.setItem('access',res.data.access);
+      localStorage.setItem('refresh',res.data.refresh)
+      navigate("/dashboard")
       // Redirect will be handled by the auth context
-      window.location.href = '/dashboard'
+
       
     } catch (error) {
       setErrors({ general: 'Error al iniciar sesión. Intenta nuevamente.' })
+      console.error(error)
     } finally {
       setIsLoading(false)
     }
@@ -109,13 +119,13 @@ const ClientLogin = () => {
             )}
 
             <Input
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
+              label="Username"
+              name="username"
+              type="text"
+              value={formData.username}
               onChange={handleInputChange}
-              error={errors.email}
-              placeholder="tu@email.com"
+              error={errors.username}
+              placeholder="Tu usuario"
               required
             />
 
