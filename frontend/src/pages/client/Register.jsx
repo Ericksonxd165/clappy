@@ -3,24 +3,56 @@ import { Link } from 'react-router-dom'
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
 import { Eye, EyeOff, UserPlus, User, Mail, Phone, MapPin } from 'lucide-react'
+import { registerUser } from '../../api/users.api'
 
 const ClientRegister = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    username:'',
+    fullname: '',
     email: '',
     phone: '',
     cedula: '',
     address: '',
     password: '',
-    confirmPassword: ''
+    password2: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 
+
+
+
+
+
+
   const handleInputChange = (e) => {
     const { name, value } = e.target
+     
+    if(name==='phone'){
+         if(/^\d{0,11}$/.test(value)){
+              
+           setFormData(prev=>({
+          ...prev,
+          [name]:value
+        }))
+      }
+    
+    }else
+
+    if(name==='cedula'){
+
+      if(/^\d{0,8}$/.test(value)){
+
+           setFormData(prev=>({
+          ...prev,
+          [name]:value
+        }))
+      }
+    }
+    else{ 
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -32,43 +64,49 @@ const ClientRegister = () => {
         [name]: ''
       }))
     }
-  }
+  }}
 
-  const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido'
-    }
-    
-    if (!formData.email) {
-      newErrors.email = 'El email es requerido'
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'El email no es válido'
-    }
-    
-    if (!formData.phone) {
-      newErrors.phone = 'El teléfono es requerido'
-    }
-    
-    if (!formData.cedula) {
-      newErrors.cedula = 'La cédula es requerida'
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'La contraseña es requerida'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres'
-    }
-    
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirma tu contraseña'
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden'
-    }
-    
-    return newErrors
+ const validateForm = () => {
+  const newErrors = {}
+  
+  if (!formData.fullname.trim()) {
+    newErrors.fullname = 'El nombre es requerido'
   }
+  
+   if (!formData.username) {
+    newErrors.username = 'El nombre de usuario es requerido'
+  } 
+
+  if (!formData.email) {
+    newErrors.email = 'El email es requerido'
+  } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    newErrors.email = 'El email no es válido'
+  }
+  
+  if (!formData.phone) {
+    newErrors.phone = 'El teléfono es requerido'
+  }
+  
+  if (!formData.cedula) {
+    newErrors.cedula = 'La cédula es requerida'
+  } else if (!/^\d{7,8}$/.test(formData.cedula)) {
+    newErrors.cedula = 'La cédula debe tener entre 7 y 8 dígitos'
+  }
+  
+  if (!formData.password) {
+    newErrors.password = 'La contraseña es requerida'
+  } else if (formData.password.length < 6) {
+    newErrors.password = 'La contraseña debe tener al menos 6 caracteres'
+  }
+  
+  if (!formData.password2) {
+    newErrors.password2 = 'Confirma tu contraseña'
+  } else if (formData.password !== formData.password2) {
+    newErrors.password2 = 'Las contraseñas no coinciden'
+  }
+  
+  return newErrors
+}
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -83,7 +121,7 @@ const ClientRegister = () => {
     
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await registerUser(formData)
       
       // Mock registration success
       console.log('Registration successful:', formData)
@@ -93,6 +131,7 @@ const ClientRegister = () => {
       
     } catch (error) {
       setErrors({ general: 'Error al crear la cuenta. Intenta nuevamente.' })
+      console.error(error)
     } finally {
       setIsLoading(false)
     }
@@ -104,7 +143,7 @@ const ClientRegister = () => {
         {/* Logo */}
         <div className="flex justify-center">
           <div className="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-2xl">CC</span>
+            <span className="text-white font-bold text-2xl">CL</span>
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
@@ -125,11 +164,23 @@ const ClientRegister = () => {
             )}
 
             <Input
-              label="Nombre Completo"
-              name="name"
-              value={formData.name}
+              label="Nombre de usuario"
+              name="username"
+              value={formData.username}
               onChange={handleInputChange}
-              error={errors.name}
+              error={errors.username}
+              placeholder="Tu nombre de usuario"
+              required
+            />
+                 
+
+             
+            <Input
+              label="Nombre Completo"
+              name="fullname"
+              value={formData.fullname}
+              onChange={handleInputChange}
+              error={errors.fullname}
               placeholder="Tu nombre completo"
               required
             />
@@ -199,9 +250,9 @@ const ClientRegister = () => {
             <div className="relative">
               <Input
                 label="Confirmar Contraseña"
-                name="confirmPassword"
+                name="password2"
                 type={showConfirmPassword ? 'text' : 'password'}
-                value={formData.confirmPassword}
+                value={formData.password2}
                 onChange={handleInputChange}
                 error={errors.confirmPassword}
                 placeholder="••••••••"

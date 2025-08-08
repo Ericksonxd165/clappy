@@ -13,6 +13,8 @@ class UsersCustom(AbstractUser):
     # bio = models.TextField(blank=True, null=True)
     cedula = models.CharField(max_length=20, unique=True, blank=False, null=False)
     phone = models.CharField(max_length=15, unique=True, blank=False, null=False)
+    address = models.CharField(max_length=200, blank=False, null=False)
+    fullname = models.CharField(max_length=50,blank=False, null=False)
     
     def __str__(self):
         return self.username  # or self.email, or any other field you prefer
