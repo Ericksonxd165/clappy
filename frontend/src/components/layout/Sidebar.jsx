@@ -1,9 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect} from 'react'
 import { Home, CreditCard, User, Package, Users, BarChart3, X } from 'lucide-react'
 import { useLocation, Link } from 'react-router-dom'
+import "./stlyingresponsive.css"
+
 
 const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
   const location = useLocation()
+
+  // Bloquear scroll del body cuando la sidebar está abierta (solo en móvil)
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflowY = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    // Limpieza al desmontar el componente
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen]);
 
   const clientMenuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
@@ -30,18 +46,19 @@ const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
       )}
 
       {/* Sidebar */}
-      <div className={`
-         absolute left-0 top-0 h-120 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out z-50
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:z-auto
-      `}>
+   <div className={`
+  absolute left-0 top-0 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out z-50
+  ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+  sm:fixed sm:h-120 
+  lg:translate-x-0 lg:static lg:h-auto lg:z-auto    idkwtfisthis
+`}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CC</span>
+              <span className="text-white font-bold text-sm">CL</span>
             </div>
-            <span className="font-bold">Caja Clap</span>
+            <span className="font-bold">Clappy</span>
           </div>
           <button
             onClick={onClose}

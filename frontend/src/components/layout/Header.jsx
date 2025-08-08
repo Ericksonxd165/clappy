@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Menu, X, User, LogOut, Bell } from 'lucide-react'
 import { useAuth } from '../../App'
-
+import "./stlyingresponsive.css"
 const Header = ({ onMenuToggle, isAdmin = false }) => {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { user, logout } = useAuth()
 
   return (
-    <header className="bg-white shadow-lg border-b-2 border-red-600">
+    <header className="bg-white shadow-lg border-b-2 border-red-600 fixx">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side - Menu button and Logo */}
         <div className="flex items-center space-x-4">

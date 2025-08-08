@@ -1,0 +1,24 @@
+/* Reemplaza tu @media query actual con esto: */
+@media (max-width: 768px) {
+  .idkwtfisthis {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%; /* Ocupa todo el ancho */
+    height: 100vh;
+    overscroll-behavior: contain;
+    overflow-y: auto;
+    z-index: 50; /* Asegura que esté por encima del overlay (z-index: 40) */
+    background: #111827; /* Fondo sólido para cubrir el contenido detrás */
+  }
+
+  /* Opcional: Si quieres un efecto de "desplazamiento" al abrirse */
+  .idkwtfisthis {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .idkwtfisthis.open {
+    transform: translateX(0);
+  }
+}

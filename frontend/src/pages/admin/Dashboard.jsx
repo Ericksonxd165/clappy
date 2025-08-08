@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Uilayout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
-import { Package, DollarSign, CheckCircle, Clock } from 'lucide-react'
+import { Package, DollarSign, CheckCircle, Clock ,CreditCard, User } from 'lucide-react'
 
 const ClientDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -18,7 +18,7 @@ const ClientDashboard = () => {
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">¡Bienvenido a Clappy!</h1>
-          <p className="text-red-100">Gestiona tus pagos de caja clap de manera fácil y segura</p>
+          <p className="text-red-100">Gestiona tus pagos de caja Clap de manera fácil y segura</p>
         </div>
 
         {/* Stats Cards */}
