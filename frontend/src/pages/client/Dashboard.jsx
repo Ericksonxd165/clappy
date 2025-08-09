@@ -3,15 +3,41 @@ import Uilayout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import { Package, DollarSign, CheckCircle, Clock, CreditCard, User} from 'lucide-react'
-
+import api, {getCaja} from '../../api/box.api'
 const ClientDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
-    availableBoxes: 25,
-    boxPrice: 150,
-    userPaymentStatus: 'pending', // 'paid', 'pending', 'none'
-    userBoxes: 2
+    availableBoxes:0,
+    boxPrice: 0,
+
   })
 
+
+
+   useEffect(()=>{
+
+  const fetchInfo =async ()=>{
+
+try{ const data = await getCaja()
+ 
+  const cajaInfo= data.data
+  setDashboardData({
+    availableBoxes:cajaInfo[0].stock,
+    boxPrice:cajaInfo[0].price
+  })
+
+
+
+}catch(error){console.error(error)}
+
+
+  }
+
+ fetchInfo()
+
+ }  ,[])
+
+ 
+  
   return (
     <Uilayout>
       <div className="space-y-6">
@@ -22,7 +48,7 @@ const ClientDashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -52,20 +78,7 @@ const ClientDashboard = () => {
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Mis Cajas</p>
-                  <p className="text-2xl font-bold text-gray-900">{dashboardData.userBoxes}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className={`p-2 rounded-lg ${
