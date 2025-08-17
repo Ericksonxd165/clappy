@@ -2,39 +2,42 @@ import { useState, useEffect } from 'react'
 import Uilayout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
-import { Package, DollarSign, CheckCircle, Clock, CreditCard, User} from 'lucide-react'
-import api, {getCaja} from '../../api/box.api'
+import { Package, DollarSign, CheckCircle, Clock, CreditCard, User, Bell } from 'lucide-react'
+import { getCaja, getCajasPersona, getNotifications } from '../../api/box.api'
+
 const ClientDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
-    availableBoxes:0,
+    availableBoxes: 0,
     boxPrice: 0,
-
   })
+  const [userPayments, setUserPayments] = useState([])
+  const [notifications, setNotifications] = useState([])
 
 
 
-   useEffect(()=>{
+  useEffect(() => {
+    const fetchInfo = async () => {
+      try {
+        const cajaRes = await getCaja()
+        if (cajaRes.data.length > 0) {
+          setDashboardData({
+            availableBoxes: cajaRes.data[0].stock,
+            boxPrice: cajaRes.data[0].price,
+          })
+        }
 
-  const fetchInfo =async ()=>{
+        const paymentsRes = await getCajasPersona()
+        setUserPayments(paymentsRes.data)
 
-try{ const data = await getCaja()
- 
-  const cajaInfo= data.data
-  setDashboardData({
-    availableBoxes:cajaInfo[0].stock,
-    boxPrice:cajaInfo[0].price
-  })
+        const notificationsRes = await getNotifications()
+        setNotifications(notificationsRes.data)
+      } catch (error) {
+        console.error(error)
+      }
+    }
 
-
-
-}catch(error){console.error(error)}
-
-
-  }
-
- fetchInfo()
-
- }  ,[])
+    fetchInfo()
+  }, [])
 
  
   
@@ -113,74 +116,11 @@ try{ const data = await getCaja()
               <CardTitle>Estado de tu Pago</CardTitle>
             </CardHeader>
             <CardContent>
-              {dashboardData.userPaymentStatus === 'paid' ? (
-                <div className="text-center py-6">
-                  <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-green-600 mb-2">¡Pago Confirmado!</h3>
-                  <p className="text-gray-600 mb-4">Tu pago ha sido procesado exitosamente</p>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <p className="text-sm text-green-700">
-                      <strong>Cajas pagadas:</strong> {dashboardData.userBoxes}<br />
-                      <strong>Total pagado:</strong> ${dashboardData.userBoxes * dashboardData.boxPrice}
-                    </p>
-                  </div>
-                </div>
-              ) : dashboardData.userPaymentStatus === 'pending' ? (
-                <div className="text-center py-6">
-                  <Clock className="h-16 w-16 text-yellow-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-yellow-600 mb-2">Pago Pendiente</h3>
-                  <p className="text-gray-600 mb-4">Tu pago está siendo procesado</p>
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <p className="text-sm text-yellow-700">
-                      Tiempo estimado de confirmación: 24-48 horas
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">Sin Pagos Realizados</h3>
-                  <p className="text-gray-600 mb-4">Aún no has realizado ningún pago</p>
-                  <Button className="w-full">
-                    Realizar Primer Pago
-                  </Button>
-                </div>
-              )}
+              <PaymentStatus payments={userPayments} />
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Información de Cajas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900">Precio por Caja</p>
-                    <p className="text-sm text-gray-600">Precio actual del mercado</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-red-600">${dashboardData.boxPrice}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900">Cajas Disponibles</p>
-                    <p className="text-sm text-gray-600">Stock actual</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-green-600">{dashboardData.availableBoxes}</p>
-                  </div>
-                </div>
-
-                <Button className="w-full" variant="outline">
-                  Ver Detalles de Pago
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <NotificationPanel notifications={notifications} />
         </div>
 
         {/* Quick Actions */}
@@ -210,4 +150,86 @@ try{ const data = await getCaja()
   )
 }
 
-export default ClientDashboard
+const PaymentStatus = ({ payments }) => {
+  const lastPayment = payments.length > 0 ? payments[payments.length - 1] : null;
+
+  if (!lastPayment) {
+    return (
+      <div className="text-center py-6">
+        <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-600 mb-2">Sin Pagos Realizados</h3>
+        <p className="text-gray-600 mb-4">Aún no has realizado ningún pago</p>
+        <Button className="w-full" onClick={() => window.location.href = '/client/payment'}>
+          Realizar Primer Pago
+        </Button>
+      </div>
+    );
+  }
+
+  const statusConfig = {
+    PENDING: {
+      icon: <Clock className="h-16 w-16 text-yellow-600 mx-auto mb-4" />,
+      title: "Pago Pendiente",
+      textColor: "text-yellow-600",
+      bgColor: "bg-yellow-50",
+      description: "Tu pago está siendo procesado. Tiempo estimado de confirmación: 24-48 horas.",
+    },
+    APPROVED: {
+      icon: <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />,
+      title: "¡Pago Confirmado!",
+      textColor: "text-green-600",
+      bgColor: "bg-green-50",
+      description: "Tu pago ha sido procesado exitosamente.",
+    },
+    REJECTED: {
+      icon: <CheckCircle className="h-16 w-16 text-red-600 mx-auto mb-4" />,
+      title: "Pago Rechazado",
+      textColor: "text-red-600",
+      bgColor: "bg-red-50",
+      description: "Tu pago ha sido rechazado. Por favor, contacta a soporte.",
+    },
+  };
+
+  const config = statusConfig[lastPayment.status] || statusConfig.PENDING;
+
+  return (
+    <div className="text-center py-6">
+      {config.icon}
+      <h3 className={`text-lg font-semibold ${config.textColor} mb-2`}>{config.title}</h3>
+      <div className={`${config.bgColor} p-4 rounded-lg`}>
+        <p className={`text-sm ${config.textColor}`}>{config.description}</p>
+      </div>
+    </div>
+  );
+};
+
+const NotificationPanel = ({ notifications }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Bell className="h-5 w-5 mr-2" />
+          Notificaciones
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {notifications.length > 0 ? (
+            notifications.map((notif) => (
+              <div key={notif.id} className={`p-3 rounded-lg ${notif.read ? 'bg-gray-100' : 'bg-red-50'}`}>
+                <p className={`text-sm ${notif.read ? 'text-gray-600' : 'text-red-800'}`}>{notif.message}</p>
+                <p className={`text-xs text-right ${notif.read ? 'text-gray-500' : 'text-red-500'}`}>
+                  {new Date(notif.timestamp).toLocaleString()}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500 text-center py-4">No tienes notificaciones nuevas.</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ClientDashboard;

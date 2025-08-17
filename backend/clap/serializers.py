@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import caja, cajaPersona
+from .models import caja, cajaPersona, Notification
 
 class CajaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,12 +26,20 @@ class CajaPersonaSerializer(serializers.ModelSerializer):
     class Meta:
         model = cajaPersona
         fields = '__all__'
+        read_only_fields = ('status', 'user',)
 
     def create(self, validated_data):
         caja_instance = validated_data['cajaid']
         if caja_instance.stock > 0:
             caja_instance.stock -= 1
+            validated_data['user'] = self.context['request'].user
             caja_instance.save()
             return super().create(validated_data)
         else:
             raise serializers.ValidationError("No hay cajas disponibles en stock.")
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'
+        read_only_fields = ('user',)

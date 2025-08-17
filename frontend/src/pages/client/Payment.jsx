@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
-import { CreditCard, Smartphone, DollarSign, Upload } from 'lucide-react'
+import { Smartphone, DollarSign, Upload } from 'lucide-react'
+import { createCajaPersona, getCaja } from '../../api/box.api'
+import { useNavigate } from 'react-router-dom'
 
 const ClientPayment = () => {
   const [paymentMethod, setPaymentMethod] = useState('mobile')
@@ -21,8 +23,27 @@ const ClientPayment = () => {
     notes: ''
   })
   const [receipt, setReceipt] = useState(null)
+  const [caja, setCaja] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
-  const boxPrice = 150
+  useEffect(() => {
+    const fetchCaja = async () => {
+      try {
+        const res = await getCaja()
+        // Assuming there is only one type of caja for now
+        if (res.data.length > 0) {
+          setCaja(res.data[0])
+        }
+      } catch (err) {
+        setError("Failed to load box details.")
+      }
+    }
+    fetchCaja()
+  }, [])
+
+  const boxPrice = caja ? parseFloat(caja.price) : 0
   const totalAmount = formData.boxes * boxPrice
 
   const handleInputChange = (e) => {
@@ -38,10 +59,40 @@ const ClientPayment = () => {
     setReceipt(file)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Handle form submission
-    console.log('Payment submitted:', formData)
+    if (!caja) {
+      setError("Caja details not loaded yet. Please wait.")
+      return
+    }
+    if (paymentMethod === 'mobile' && !receipt) {
+      setError("Please upload a payment receipt.")
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    const data = new FormData()
+    data.append('cajaid', caja.id)
+    data.append('payment_method', paymentMethod === 'mobile' ? 'Pago Movil' : 'Efectivo')
+    data.append('amount', totalAmount)
+    data.append('moneda', 'USD') // Assuming USD for now, can be made dynamic
+
+    if (paymentMethod === 'mobile') {
+      data.append('reference', formData.reference)
+      data.append('img', receipt)
+    }
+
+    try {
+      await createCajaPersona(data)
+      navigate('/client/dashboard') // Redirect to dashboard on success
+    } catch (err) {
+      setError("Failed to submit payment. Please try again.")
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -61,6 +112,7 @@ const ClientPayment = () => {
                 <CardTitle>Información de Pago</CardTitle>
               </CardHeader>
               <CardContent>
+                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Cantidad de Cajas */}
                   <div>
@@ -247,8 +299,8 @@ const ClientPayment = () => {
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full">
-                    Confirmar Pago
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Enviando...' : 'Confirmar Pago'}
                   </Button>
                 </form>
               </CardContent>
