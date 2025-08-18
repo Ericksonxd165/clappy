@@ -118,13 +118,16 @@ const ClientRegister = () => {
     }
     
     setIsLoading(true)
+
+    const submissionData = {
+      ...formData,
+      address: `urb ciudad varyna, ${formData.address}`
+    }
     
     try {
-      // Simulate API call
-      await registerUser(formData)
+      await registerUser(submissionData)
       
-      // Mock registration success
-      console.log('Registration successful:', formData)
+      console.log('Registration successful:', submissionData)
       
       // Redirect to login
       window.location.href = '/login'
@@ -218,14 +221,23 @@ const ClientRegister = () => {
               />
             </div>
 
-            <Input
-              label="Dirección"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              error={errors.address}
-              placeholder="Tu dirección completa"
-            />
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700">Dirección</label>
+              <div className="mt-1 flex rounded-md shadow-sm">
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                  urb ciudad varyna,
+                </span>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-red-500 focus:border-red-500 sm:text-sm border-gray-300"
+                  placeholder="Tu dirección completa"
+                />
+              </div>
+              {errors.address && <p className="mt-2 text-sm text-red-600">{errors.address}</p>}
+            </div>
 
             <div className="relative">
               <Input

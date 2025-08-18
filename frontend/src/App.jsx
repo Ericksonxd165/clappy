@@ -25,9 +25,10 @@ export const useAuth = () => {
   return context
 }
 
-function App() {
+const AppContent = () => {
   const [user, setUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const navigate = useNavigate()
 
   const login = (userData) => {
     setUser(userData)
@@ -37,13 +38,15 @@ function App() {
   const logout = () => {
     setUser(null)
     setIsAuthenticated(false)
+    localStorage.removeItem('access')
+    localStorage.removeItem('refresh')
+    navigate('/login')
   }
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Routes>
+      <div className="min-h-screen bg-gray-50">
+        <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<ClientLogin />} />
             <Route path="/register" element={<ClientRegister />} />
@@ -65,6 +68,14 @@ function App() {
         </div>
       </Router>
     </AuthContext.Provider>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   )
 }
 
