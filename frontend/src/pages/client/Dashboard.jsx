@@ -7,8 +7,9 @@ import { getCaja, getCajasPersona, getNotifications } from '../../api/box.api'
 
 const ClientDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
-    availableBoxes: 0,
-    boxPrice: 0,
+    availableBoxes:"--",
+    boxPrice: "--",
+
   })
   const [userPayments, setUserPayments] = useState([])
   const [notifications, setNotifications] = useState([])
