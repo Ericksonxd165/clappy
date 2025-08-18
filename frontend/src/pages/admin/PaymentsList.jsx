@@ -1,78 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Uilayout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
-import Input from '../../components/UI/Input'
-import { Search, Filter, Download, CheckCircle, X, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, CheckCircle, X, Eye, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { getCajasPersona, approvePayment, rejectPayment, confirmDelivery } from '../../api/box.api'
 
 const AdminPaymentsList = () => {
-  const [payments, setPayments] = useState([
-    {
-      id: 1,
-      user: 'Juan Pérez',
-      email: 'juan@email.com',
-      method: 'Pago Móvil',
-      bank: 'Banesco',
-      reference: '123456789',
-      amount: 300,
-      boxes: 2,
-      date: '2024-01-20',
-      status: 'pending',
-      receipt: '/receipt1.jpg'
-    },
-    {
-      id: 2,
-      user: 'María García',
-      email: 'maria@email.com',
-      method: 'Efectivo',
-      bank: '-',
-      reference: '-',
-      amount: 150,
-      boxes: 1,
-      date: '2024-01-19',
-      status: 'approved',
-      receipt: null
-    },
-    {
-      id: 3,
-      user: 'Carlos López',
-      email: 'carlos@email.com',
-      method: 'Pago Móvil',
-      bank: 'Mercantil',
-      reference: '987654321',
-      amount: 450,
-      boxes: 3,
-      date: '2024-01-18',
-      status: 'pending',
-      receipt: '/receipt3.jpg'
-    },
-    {
-      id: 4,
-      user: 'Ana Rodríguez',
-      email: 'ana@email.com',
-      method: 'Pago Móvil',
-      bank: 'Venezuela',
-      reference: '456789123',
-      amount: 150,
-      boxes: 1,
-      date: '2024-01-17',
-      status: 'delivered',
-      receipt: '/receipt4.jpg'
-    },
-    {
-      id: 5,
-      user: 'Luis Martínez',
-      email: 'luis@email.com',
-      method: 'Efectivo',
-      bank: '-',
-      reference: '-',
-      amount: 600,
-      boxes: 4,
-      date: '2024-01-16',
-      status: 'rejected',
-      receipt: null
-    }
-  ])
+  const [payments, setPayments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const [selectedPayments, setSelectedPayments] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -81,18 +17,36 @@ const AdminPaymentsList = () => {
   const [showReceiptModal, setShowReceiptModal] = useState(false)
   const [selectedReceipt, setSelectedReceipt] = useState(null)
 
+  const fetchPayments = async () => {
+    try {
+      setLoading(true)
+      const res = await getCajasPersona()
+      setPayments(res.data)
+    } catch (err) {
+      setError('Error al cargar los pagos.')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPayments()
+  }, [])
+
   const itemsPerPage = 10
   const totalPages = Math.ceil(payments.length / itemsPerPage)
 
   // Filter payments
   const filteredPayments = payments.filter(payment => {
-    const matchesSearch = payment.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.reference.includes(searchTerm)
+    const user = payment.user || {};
+    const matchesSearch = (user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (payment.reference && payment.reference.includes(searchTerm));
     
-    const matchesStatus = statusFilter === 'all' || payment.status === statusFilter
+    const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
     
-    return matchesSearch && matchesStatus
+    return matchesSearch && matchesStatus;
   })
 
   // Paginate payments
@@ -117,14 +71,26 @@ const AdminPaymentsList = () => {
     }
   }
 
-  const handleStatusChange = (paymentId, newStatus) => {
-    setPayments(prev => 
-      prev.map(payment => 
-        payment.id === paymentId 
-          ? { ...payment, status: newStatus }
-          : payment
-      )
-    )
+  const handleStatusChange = async (paymentId, action) => {
+    try {
+      switch (action) {
+        case 'approve':
+          await approvePayment(paymentId)
+          break
+        case 'reject':
+          await rejectPayment(paymentId)
+          break
+        case 'deliver':
+          await confirmDelivery(paymentId)
+          break
+        default:
+          return
+      }
+      fetchPayments() // Refetch to update the list
+    } catch (err) {
+      alert(`Error al actualizar el estado del pago.`)
+      console.error(err)
+    }
   }
 
   const handleBulkAction = (action) => {
@@ -134,15 +100,21 @@ const AdminPaymentsList = () => {
     setSelectedPayments([])
   }
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, delivered) => {
+    if (delivered) {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          Entregado
+        </span>
+      )
+    }
     const statusConfig = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pendiente' },
-      approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Aprobado' },
-      delivered: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Entregado' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rechazado' }
+      PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pendiente' },
+      APPROVED: { bg: 'bg-green-100', text: 'text-green-800', label: 'Aprobado' },
+      REJECTED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rechazado' }
     }
     
-    const config = statusConfig[status] || statusConfig.pending
+    const config = statusConfig[status] || statusConfig.PENDING
     
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
@@ -152,8 +124,17 @@ const AdminPaymentsList = () => {
   }
 
   const showReceipt = (receipt) => {
-    setSelectedReceipt(receipt)
+    const imageUrl = `${import.meta.env.VITE_BASE_API_URL}${receipt}`
+    setSelectedReceipt(imageUrl)
     setShowReceiptModal(true)
+  }
+
+  if (loading) {
+    return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Layout>
+  }
+
+  if (error) {
+    return <Layout isAdmin={true}><div className="text-center p-8 text-red-600">{error}</div></Layout>
   }
 
   return (
@@ -188,10 +169,9 @@ const AdminPaymentsList = () => {
                   className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="all">Todos los estados</option>
-                  <option value="pending">Pendientes</option>
-                  <option value="approved">Aprobados</option>
-                  <option value="delivered">Entregados</option>
-                  <option value="rejected">Rechazados</option>
+                  <option value="PENDING">Pendientes</option>
+                  <option value="APPROVED">Aprobados</option>
+                  <option value="REJECTED">Rechazados</option>
                 </select>
               </div>
 
@@ -200,7 +180,7 @@ const AdminPaymentsList = () => {
                 <div className="flex space-x-2">
                   <Button
                     size="sm"
-                    onClick={() => handleBulkAction('approved')}
+                    onClick={() => handleBulkAction('approve')}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     Aprobar ({selectedPayments.length})
@@ -208,26 +188,20 @@ const AdminPaymentsList = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleBulkAction('delivered')}
+                    onClick={() => handleBulkAction('deliver')}
                   >
                     Marcar Entregado
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleBulkAction('rejected')}
+                    onClick={() => handleBulkAction('reject')}
                     className="text-red-600 border-red-600 hover:bg-red-50"
                   >
                     Rechazar
                   </Button>
                 </div>
               )}
-
-              {/* Export Button */}
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -251,7 +225,6 @@ const AdminPaymentsList = () => {
                     <th className="px-6 py-3 text-left font-medium text-gray-900">Método</th>
                     <th className="px-6 py-3 text-left font-medium text-gray-900">Referencia</th>
                     <th className="px-6 py-3 text-left font-medium text-gray-900">Monto</th>
-                    <th className="px-6 py-3 text-left font-medium text-gray-900">Cajas</th>
                     <th className="px-6 py-3 text-left font-medium text-gray-900">Fecha</th>
                     <th className="px-6 py-3 text-left font-medium text-gray-900">Estado</th>
                     <th className="px-6 py-3 text-left font-medium text-gray-900">Acciones</th>
@@ -270,16 +243,13 @@ const AdminPaymentsList = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <div className="font-medium text-gray-900">{payment.user}</div>
-                          <div className="text-gray-500">{payment.email}</div>
+                          <div className="font-medium text-gray-900">{payment.user?.username}</div>
+                          <div className="text-gray-500">{payment.user?.email}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <div className="text-gray-900">{payment.method}</div>
-                          {payment.bank !== '-' && (
-                            <div className="text-gray-500 text-xs">{payment.bank}</div>
-                          )}
+                          <div className="text-gray-900">{payment.payment_method}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-gray-900">
@@ -289,19 +259,16 @@ const AdminPaymentsList = () => {
                         ${payment.amount}
                       </td>
                       <td className="px-6 py-4 text-gray-900">
-                        {payment.boxes}
-                      </td>
-                      <td className="px-6 py-4 text-gray-900">
-                        {payment.date}
+                        {new Date(payment.date).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
-                        {getStatusBadge(payment.status)}
+                        {getStatusBadge(payment.status, payment.delivered)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex space-x-2">
-                          {payment.receipt && (
+                          {payment.img && (
                             <button
-                              onClick={() => showReceipt(payment.receipt)}
+                              onClick={() => showReceipt(payment.img)}
                               className="text-blue-600 hover:text-blue-800"
                               title="Ver comprobante"
                             >
@@ -309,17 +276,17 @@ const AdminPaymentsList = () => {
                             </button>
                           )}
                           
-                          {payment.status === 'pending' && (
+                          {payment.status === 'PENDING' && (
                             <>
                               <button
-                                onClick={() => handleStatusChange(payment.id, 'approved')}
+                                onClick={() => handleStatusChange(payment.id, 'approve')}
                                 className="text-green-600 hover:text-green-800"
                                 title="Aprobar"
                               >
                                 <CheckCircle className="h-4 w-4" />
                               </button>
                               <button
-                                onClick={() => handleStatusChange(payment.id, 'rejected')}
+                                onClick={() => handleStatusChange(payment.id, 'reject')}
                                 className="text-red-600 hover:text-red-800"
                                 title="Rechazar"
                               >
@@ -328,9 +295,9 @@ const AdminPaymentsList = () => {
                             </>
                           )}
                           
-                          {payment.status === 'approved' && (
+                          {payment.status === 'APPROVED' && !payment.delivered && (
                             <button
-                              onClick={() => handleStatusChange(payment.id, 'delivered')}
+                              onClick={() => handleStatusChange(payment.id, 'deliver')}
                               className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-600 rounded"
                             >
                               Entregar
@@ -404,7 +371,7 @@ const AdminPaymentsList = () => {
               </div>
               <div className="p-4">
                 <img
-                  src={`/placeholder.svg?height=600&width=400&text=Comprobante de Pago`}
+                  src={selectedReceipt}
                   alt="Comprobante"
                   className="w-full h-auto rounded-lg"
                 />

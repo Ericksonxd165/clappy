@@ -29,7 +29,25 @@ class cajaPersona(models.Model):
         reference = models.CharField(max_length=100, blank=True, null=True)
         img = models.ImageField(upload_to='caja_images/', blank=True, null=True)
         moneda = models.CharField(max_length=10, default='Bs')
-        payed = models.BooleanField(default=False)
+        PAYMENT_STATUS_CHOICES = [
+                ('PENDING', 'Pending'),
+                ('APPROVED', 'Approved'),
+                ('REJECTED', 'Rejected'),
+        ]
+        status = models.CharField(
+                max_length=10,
+                choices=PAYMENT_STATUS_CHOICES,
+                default='PENDING',
+        )
         
         def __str__(self):
                 return f"{self.user.username} - {self.cajaid.id} - {self.date}"
+
+class Notification(models.Model):
+    user = models.ForeignKey(UsersCustom, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    read = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.message}"
