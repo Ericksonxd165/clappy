@@ -6,8 +6,8 @@ import { Package, DollarSign, CheckCircle, Clock, CreditCard, User} from 'lucide
 import api, {getCaja} from '../../api/box.api'
 const ClientDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
-    availableBoxes:0,
-    boxPrice: 0,
+    availableBoxes:"--",
+    boxPrice: "--",
 
   })
 
