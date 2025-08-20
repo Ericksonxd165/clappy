@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import Uilayout from '../../components/layout/Layout'
+import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
 import { Package, DollarSign, Plus, Minus, Save, History, TrendingUp, AlertTriangle } from 'lucide-react'
-import { getCaja, updateCaja } from '../../api/box.api'
+import { getCaja, updateCaja, createCaja } from '../../api/box.api'
 
 const AdminStock = () => {
   const [caja, setCaja] = useState(null)
@@ -35,6 +35,20 @@ const AdminStock = () => {
       setLoading(false)
     }
   }
+
+  const handleCreateCaja = async () => {
+    try {
+      setLoading(true);
+      await createCaja({ price: 0, stock: 0 }); // Create with default values
+      alert('Caja creada exitosamente. Ahora puedes actualizar su precio y stock.');
+      await fetchCaja(); // Fetch the newly created caja
+    } catch (error) {
+      alert('Error al crear la caja.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchCaja()
@@ -95,19 +109,28 @@ const AdminStock = () => {
   const stockStatus = caja ? getStockStatus(caja) : { color: '', bg: '', status: 'N/A' };
 
   if (loading) {
-    return <Uilayout isAdmin={true}><div className="text-center p-8">Cargando...</div></Uilayout>
+    return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Uilayout>
   }
 
   if (error) {
-    return <Uilayout isAdmin={true}><div className="text-center p-8 text-red-600">{error}</div></Uilayout>
+    return <Layout isAdmin={true}><div className="text-center p-8 text-red-600">{error}</div></Uilayout>
   }
 
   if (!caja) {
-    return <Uilayout isAdmin={true}><div className="text-center p-8">No hay caja para mostrar.</div></Uilayout>
+    return (
+      <Layout isAdmin={true}>
+        <div className="text-center p-8">
+          <p className="text-lg text-gray-700 mb-4">No hay ninguna caja registrada.</p>
+          <Button onClick={handleCreateCaja} disabled={loading}>
+            {loading ? 'Creando...' : 'Crear Primera Caja'}
+          </Button>
+        </div>
+      </Uilayout>
+    );
   }
 
   return (
-    <Uilayout isAdmin={true}>
+    <Layout isAdmin={true}>
       <div className="space-y-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">

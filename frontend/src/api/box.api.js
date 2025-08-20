@@ -24,6 +24,7 @@ return config
 })
 
 export const getCaja = ()=> { return api.get('/cajas/') }
+export const createCaja = (data)=> { return api.post('/cajas/', data) }
 export const updateCaja = (id, data)=> { return api.put(`/cajas/${id}/`, data) }
 
 export const getCajasPersona = ()=> { return api.get('/cajaspersona/') }
