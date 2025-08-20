@@ -12,7 +12,13 @@ from users.models import UsersCustom
 class CajaViewSet(viewsets.ModelViewSet):
     queryset = caja.objects.all()
     serializer_class = CajaSerializer
-    permission_classes = [IsAdminUser]
+
+    def get_permissions(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminUser]
+        return [permission() for permission in permission_classes]
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

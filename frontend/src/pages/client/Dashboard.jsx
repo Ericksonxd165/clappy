@@ -10,7 +10,10 @@ const ClientDashboard = () => {
     availableBoxes: "--",
     boxPrice: "--",
   })
-  const [userPayments, setUserPayments] = useState([])
+  const [userPayments, setUserPayments] = useState({
+    availableBoxes: "--",
+    boxPrice: "--",
+  })
   const [notifications, setNotifications] = useState([])
 
   const userPaymentStatus = userPayments.length > 0

@@ -85,7 +85,7 @@ const ClientPayment = () => {
 
     try {
       await createCajaPersona(data)
-      navigate('/client/dashboard') // Redirect to dashboard on success
+      navigate('/dashboard') // Redirect to dashboard on success
     } catch (err) {
       if (err.response && err.response.data && err.response.data.error) {
         setError(err.response.data.error)

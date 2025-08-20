@@ -41,7 +41,9 @@ const ClientProfile = () => {
 
   const handleSave = async () => {
     try {
-      const res = await updateCurrentUser(formData)
+      const { fullname, email, phone, cedula, address } = formData;
+      const dataToUpdate = { fullname, email, phone, cedula, address };
+      const res = await updateCurrentUser(dataToUpdate)
       setProfileData(res.data)
       setIsEditing(false)
     } catch (err) {
