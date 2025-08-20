@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useState, createContext, useContext } from 'react'
 
 // Client Pages
@@ -43,6 +43,18 @@ const AppContent = () => {
     navigate('/login')
   }
 
+  const PrivateRoute = ({ children, adminOnly }) => {
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+
+    if (adminOnly && (!user || !user.is_staff)) {
+      return <Navigate to="/dashboard" replace />;
+    }
+
+    return children;
+  };
+
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
       <div className="min-h-screen bg-gray-50">
@@ -58,15 +70,15 @@ const AppContent = () => {
             <Route path="/profile" element={<ClientProfile />} />
             
             {/* Admin Routes */}
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/payments" element={<AdminPaymentsList />} />
-            <Route path="/admin/stock" element={<AdminStock />} />
+            <Route path="/admin/dashboard" element={<PrivateRoute adminOnly><AdminDashboard /></PrivateRoute>} />
+            <Route path="/admin/payments" element={<PrivateRoute adminOnly><AdminPaymentsList /></PrivateRoute>} />
+            <Route path="/admin/stock" element={<PrivateRoute adminOnly><AdminStock /></PrivateRoute>} />
             
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </div>
-      </Router>
+      
     </AuthContext.Provider>
   )
 }

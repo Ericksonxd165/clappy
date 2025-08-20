@@ -4,7 +4,7 @@ import { useAuth } from '../../App'
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
-import api from '../../api/users.api'
+import api,{getCurrentUser,loginUser, refreshToken} from '../../api/users.api'
 const ClientLogin = () => {
   const [formData, setFormData] = useState({
     username: '',
@@ -16,21 +16,22 @@ const ClientLogin = () => {
 
   const navigate = useNavigate();
   
+  const { login } = useAuth()
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await getCurrentUser();
-        setUser(res.data);
+        login(res.data); // Use the login function from useAuth
         navigate('/dashboard');
       } catch (err) {
         console.error('Error fetching user:', err);
         }
       }
       fetchUser();
-  }, [navigate]);
+  }, [navigate, login]); // Add login to dependency array
 
 
-  const { login } = useAuth()
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -80,7 +81,7 @@ const ClientLogin = () => {
        const res = await api.post('/login/', formData);
       localStorage.setItem('access',res.data.access);
       localStorage.setItem('refresh',res.data.refresh)
-      navigate("/dashboard")
+      login(res.data.user)
       // Redirect will be handled by the auth context
 
       
