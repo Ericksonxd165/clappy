@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom'
 const ClientPayment = () => {
   const [paymentMethod, setPaymentMethod] = useState('mobile')
   const [formData, setFormData] = useState({
-    boxes: 1,
     paymentType: 'mobile',
     // Pago Móvil fields
     bank: '',
@@ -44,7 +43,7 @@ const ClientPayment = () => {
   }, [])
 
   const boxPrice = caja ? parseFloat(caja.price) : 0
-  const totalAmount = formData.boxes * boxPrice
+  const totalAmount = 1 * boxPrice
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -88,7 +87,11 @@ const ClientPayment = () => {
       await createCajaPersona(data)
       navigate('/client/dashboard') // Redirect to dashboard on success
     } catch (err) {
-      setError("Failed to submit payment. Please try again.")
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error)
+      } else {
+        setError("Failed to submit payment. Please try again.")
+      }
       console.error(err)
     } finally {
       setLoading(false)
@@ -114,30 +117,6 @@ const ClientPayment = () => {
               <CardContent>
                 {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Cantidad de Cajas */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cantidad de Cajas
-                    </label>
-                    <div className="flex items-center space-x-4">
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, boxes: Math.max(1, prev.boxes - 1) }))}
-                        className="p-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                      >
-                        -
-                      </button>
-                      <span className="text-xl font-semibold px-4">{formData.boxes}</span>
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, boxes: prev.boxes + 1 }))}
-                        className="p-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
                   {/* Método de Pago */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-4">
@@ -317,7 +296,7 @@ const ClientPayment = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Cantidad de cajas:</span>
-                    <span className="font-medium">{formData.boxes}</span>
+                    <span className="font-medium">1</span>
                   </div>
                   
                   <div className="flex justify-between">

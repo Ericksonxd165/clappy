@@ -25,8 +25,9 @@ const AdminStock = () => {
         const cajaData = res.data[0]
         setCaja(cajaData)
         setNewPrice(cajaData.price)
+        setError(null)
       } else {
-        setError('No se encontraron cajas. Por favor, crea una primero.')
+        setCaja(null)
       }
     } catch (err) {
       setError('Error al cargar los datos de la caja.')
@@ -109,11 +110,11 @@ const AdminStock = () => {
   const stockStatus = caja ? getStockStatus(caja) : { color: '', bg: '', status: 'N/A' };
 
   if (loading) {
-    return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Uilayout>
+    return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Layout>
   }
 
   if (error) {
-    return <Layout isAdmin={true}><div className="text-center p-8 text-red-600">{error}</div></Uilayout>
+    return <Layout isAdmin={true}><div className="text-center p-8 text-red-600">{error}</div></Layout>
   }
 
   if (!caja) {
@@ -125,7 +126,7 @@ const AdminStock = () => {
             {loading ? 'Creando...' : 'Crear Primera Caja'}
           </Button>
         </div>
-      </Uilayout>
+      </Layout>
     );
   }
 
@@ -324,7 +325,7 @@ const AdminStock = () => {
           </Card>
         </div>
       </div>
-    </Uilayout>
+    </Layout>
   )
 }
 

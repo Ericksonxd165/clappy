@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import Uilayout from '../../components/layout/Layout'
+import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import { Package, DollarSign, CheckCircle, Clock, CreditCard, User, Bell } from 'lucide-react'
@@ -7,12 +7,15 @@ import { getCaja, getCajasPersona, getNotifications } from '../../api/box.api'
 
 const ClientDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
-    availableBoxes:"--",
+    availableBoxes: "--",
     boxPrice: "--",
-
   })
   const [userPayments, setUserPayments] = useState([])
   const [notifications, setNotifications] = useState([])
+
+  const userPaymentStatus = userPayments.length > 0
+    ? (userPayments[0].status === 'APPROVED' ? 'paid' : 'pending')
+    : 'unpaid';
 
 
 
@@ -43,7 +46,7 @@ const ClientDashboard = () => {
  
   
   return (
-    <Uilayout>
+    <Layout>
       <div className="space-y-6">
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
@@ -86,10 +89,10 @@ const ClientDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className={`p-2 rounded-lg ${
-                  dashboardData.userPaymentStatus === 'paid' ? 'bg-green-100' : 
-                  dashboardData.userPaymentStatus === 'pending' ? 'bg-yellow-100' : 'bg-gray-100'
+                  userPaymentStatus === 'paid' ? 'bg-green-100' :
+                  userPaymentStatus === 'pending' ? 'bg-yellow-100' : 'bg-gray-100'
                 }`}>
-                  {dashboardData.userPaymentStatus === 'paid' ? (
+                  {userPaymentStatus === 'paid' ? (
                     <CheckCircle className="h-6 w-6 text-green-600" />
                   ) : (
                     <Clock className="h-6 w-6 text-yellow-600" />
@@ -98,11 +101,11 @@ const ClientDashboard = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Estado de Pago</p>
                   <p className={`text-sm font-bold ${
-                    dashboardData.userPaymentStatus === 'paid' ? 'text-green-600' : 
-                    dashboardData.userPaymentStatus === 'pending' ? 'text-yellow-600' : 'text-gray-600'
+                    userPaymentStatus === 'paid' ? 'text-green-600' :
+                    userPaymentStatus === 'pending' ? 'text-yellow-600' : 'text-gray-600'
                   }`}>
-                    {dashboardData.userPaymentStatus === 'paid' ? 'Pagado' : 
-                     dashboardData.userPaymentStatus === 'pending' ? 'Pendiente' : 'Sin Pago'}
+                    {userPaymentStatus === 'paid' ? 'Pagado' :
+                     userPaymentStatus === 'pending' ? 'Pendiente' : 'Sin Pago'}
                   </p>
                 </div>
               </div>
@@ -147,7 +150,7 @@ const ClientDashboard = () => {
           </CardContent>
         </Card>
       </div>
-    </Uilayout>
+    </Layout>
   )
 }
 

@@ -23,7 +23,7 @@ const AdminDashboard = () => {
         if (cajaRes.data.length > 0) {
           setCaja(cajaRes.data[0])
         } else {
-          setError('No se encontró la entidad de caja. Por favor, crea una en la sección de Stock.')
+          setCaja(null)
         }
         setPayments(paymentsRes.data)
       } catch (err) {

@@ -231,82 +231,96 @@ const AdminPaymentsList = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {paginatedPayments.map((payment) => (
-                    <tr key={payment.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedPayments.includes(payment.id)}
-                          onChange={() => handleSelectPayment(payment.id)}
-                          className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-medium text-gray-900">{payment.user?.username}</div>
-                          <div className="text-gray-500">{payment.user?.email}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="text-gray-900">{payment.payment_method}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-900">
-                        {payment.reference}
-                      </td>
-                      <td className="px-6 py-4 font-medium text-gray-900">
-                        ${payment.amount}
-                      </td>
-                      <td className="px-6 py-4 text-gray-900">
-                        {new Date(payment.date).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        {getStatusBadge(payment.status, payment.delivered)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex space-x-2">
-                          {payment.img && (
-                            <button
-                              onClick={() => showReceipt(payment.img)}
-                              className="text-blue-600 hover:text-blue-800"
-                              title="Ver comprobante"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                          )}
-                          
-                          {payment.status === 'PENDING' && (
-                            <>
-                              <button
-                                onClick={() => handleStatusChange(payment.id, 'approve')}
-                                className="text-green-600 hover:text-green-800"
-                                title="Aprobar"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => handleStatusChange(payment.id, 'reject')}
-                                className="text-red-600 hover:text-red-800"
-                                title="Rechazar"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </>
-                          )}
-                          
-                          {payment.status === 'APPROVED' && !payment.delivered && (
-                            <button
-                              onClick={() => handleStatusChange(payment.id, 'deliver')}
-                              className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-600 rounded"
-                            >
-                              Entregar
-                            </button>
-                          )}
+                  {paginatedPayments.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
+                        <div className="flex flex-col items-center">
+                          <CreditCard className="h-12 w-12 text-gray-400 mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900">No hay pagos disponibles</h3>
+                          <p className="mt-1 text-sm text-gray-500">
+                            Cuando los usuarios realicen pagos, aparecerán aquí.
+                          </p>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    paginatedPayments.map((payment) => (
+                      <tr key={payment.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedPayments.includes(payment.id)}
+                            onChange={() => handleSelectPayment(payment.id)}
+                            className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="font-medium text-gray-900">{payment.user?.username}</div>
+                            <div className="text-gray-500">{payment.user?.email}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="text-gray-900">{payment.payment_method}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-900">
+                          {payment.reference}
+                        </td>
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          ${payment.amount}
+                        </td>
+                        <td className="px-6 py-4 text-gray-900">
+                          {new Date(payment.date).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          {getStatusBadge(payment.status, payment.delivered)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex space-x-2">
+                            {payment.img && (
+                              <button
+                                onClick={() => showReceipt(payment.img)}
+                                className="text-blue-600 hover:text-blue-800"
+                                title="Ver comprobante"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            )}
+
+                            {payment.status === 'PENDING' && (
+                              <>
+                                <button
+                                  onClick={() => handleStatusChange(payment.id, 'approve')}
+                                  className="text-green-600 hover:text-green-800"
+                                  title="Aprobar"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleStatusChange(payment.id, 'reject')}
+                                  className="text-red-600 hover:text-red-800"
+                                  title="Rechazar"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </>
+                            )}
+
+                            {payment.status === 'APPROVED' && !payment.delivered && (
+                              <button
+                                onClick={() => handleStatusChange(payment.id, 'deliver')}
+                                className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-600 rounded"
+                              >
+                                Entregar
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

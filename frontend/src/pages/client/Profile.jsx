@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import Uilayout from '../../components/layout/Layout'
+import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
@@ -56,15 +56,15 @@ const ClientProfile = () => {
   }
 
   if (loading) {
-    return <Uilayout><div className="text-center p-8">Cargando perfil...</div></Uilayout>
+    return <Layout><div className="text-center p-8">Cargando perfil...</div></Layout>
   }
 
   if (error) {
-    return <Uilayout><div className="text-center p-8 text-red-600">{error}</div></Uilayout>
+    return <Layout><div className="text-center p-8 text-red-600">{error}</div></Layout>
   }
 
   return (
-    <Uilayout>
+    <Layout>
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">Mi Perfil</h1>
@@ -160,7 +160,7 @@ const ClientProfile = () => {
           </div>
         </div>
       </div>
-    </Uilayout>
+    </Layout>
   )
 }
 
