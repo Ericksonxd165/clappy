@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
-import { Search, CheckCircle, X, Eye, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { Search, CheckCircle, X, Eye, ChevronLeft, ChevronRight, Download, CreditCard } from 'lucide-react'
 import { getCajasPersona, approvePayment, rejectPayment, confirmDelivery } from '../../api/box.api'
 
 const AdminPaymentsList = () => {

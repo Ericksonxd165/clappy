@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
@@ -10,6 +11,8 @@ const AdminDashboard = () => {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -162,11 +165,11 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button className="w-full" onClick={() => window.location.href = '/admin/stock'}>
+              <Button className="w-full" onClick={() => navigate('/admin/stock')}>
                 <Package className="h-4 w-4 mr-2" />
                 Gestionar Stock
               </Button>
-              <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/payments'}>
+              <Button variant="outline" className="w-full" onClick={() => navigate('/admin/payments')}>
                 <CreditCard className="h-4 w-4 mr-2" />
                 Ver Pagos
               </Button>
