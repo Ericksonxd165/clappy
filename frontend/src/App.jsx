@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { useState, createContext, useContext } from 'react'
+import { useState, createContext, useContext , useEffect} from 'react'
+import { getCurrentUser } from './api/users.api'
 
 // Client Pages
 import ClientDashboard from './pages/client/Dashboard'
@@ -13,6 +14,7 @@ import ClientForgotPassword from './pages/client/ForgotPassword'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminPaymentsList from './pages/admin/PaymentsList'
 import AdminStock from './pages/admin/Stock'
+import AdminLayout from './components/layout/AdminLayout'
 
 // Context for authentication
 const AuthContext = createContext()
@@ -28,14 +30,40 @@ export const useAuth = () => {
 const AppContent = () => {
   const [user, setUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true); // New loading state
   const navigate = useNavigate()
 
+  // Fetch user data on initial load if tokens exist
+  useEffect(() => {
+    const checkAuth = async () => {
+      const accessToken = localStorage.getItem('access');
+      console.log("Checking auth. Access token:", accessToken);
+      if (accessToken) {
+        try {
+          const res = await getCurrentUser();
+          console.log("getCurrentUser successful. User data:", res.data);
+          login(res.data);
+        } catch (error) {
+          console.error("Error fetching current user:", error);
+          logout(); // Clear invalid tokens
+        } finally {
+          setLoading(false); // Set loading to false after checkAuth completes
+        }
+      } else {
+        setLoading(false); // No token, so not loading
+      }
+    };
+    checkAuth();
+  }, []); // Run only once on mount
+
   const login = (userData) => {
+    console.log("Login called with user data:", userData);
     setUser(userData)
     setIsAuthenticated(true)
   }
 
   const logout = () => {
+    console.log("Logout called.");
     setUser(null)
     setIsAuthenticated(false)
     localStorage.removeItem('access')
@@ -44,16 +72,23 @@ const AppContent = () => {
   }
 
   const PrivateRoute = ({ children, adminOnly }) => {
+    console.log("PrivateRoute check. isAuthenticated:", isAuthenticated, "user:", user, "adminOnly:", adminOnly);
     if (!isAuthenticated) {
+      console.log("Not authenticated, redirecting to login.");
       return <Navigate to="/login" replace />;
     }
 
     if (adminOnly && (!user || !user.is_staff)) {
+      console.log("Authenticated but not admin, redirecting to dashboard.");
       return <Navigate to="/dashboard" replace />;
     }
 
     return children;
   };
+
+  if (loading) {
+    return <div>Loading...</div>; // Or a more sophisticated loading spinner
+  }
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
@@ -70,9 +105,12 @@ const AppContent = () => {
             <Route path="/profile" element={<ClientProfile />} />
             
             {/* Admin Routes */}
-            <Route path="/admin/dashboard" element={<PrivateRoute adminOnly><AdminDashboard /></PrivateRoute>} />
-            <Route path="/admin/payments" element={<PrivateRoute adminOnly><AdminPaymentsList /></PrivateRoute>} />
-            <Route path="/admin/stock" element={<PrivateRoute adminOnly><AdminStock /></PrivateRoute>} />
+            {/* Admin Routes */}
+            <Route path="/admin" element={<PrivateRoute adminOnly><AdminLayout /></PrivateRoute>}>
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="payments" element={<AdminPaymentsList />} />
+                <Route path="stock" element={<AdminStock />} />
+            </Route>
             
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/login" replace />} />

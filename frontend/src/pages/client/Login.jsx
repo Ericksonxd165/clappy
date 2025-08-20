@@ -18,21 +18,6 @@ const ClientLogin = () => {
   
   const { login } = useAuth()
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await getCurrentUser();
-        login(res.data); // Use the login function from useAuth
-        navigate('/dashboard');
-      } catch (err) {
-        console.error('Error fetching user:', err);
-        }
-      }
-      fetchUser();
-  }, [navigate, login]); // Add login to dependency array
-
-//ola
-
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -78,13 +63,20 @@ const ClientLogin = () => {
     
     try {
       // API call
-       const res = await api.post('/login/', formData);
-      localStorage.setItem('access',res.data.access);
-      localStorage.setItem('refresh',res.data.refresh)
-      login(res.data.user)
-      // Redirect will be handled by the auth context
+      const res = await api.post('/login/', formData);
+      localStorage.setItem('access', res.data.access);
+      localStorage.setItem('refresh', res.data.refresh);
 
-      
+      // Fetch user data after successful login
+      const userRes = await getCurrentUser();
+      login(userRes.data);
+
+      // Redirect based on user role
+      if (userRes.data.is_staff) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       setErrors({ general: 'Error al iniciar sesión. Intenta nuevamente.' })
       console.error(error)

@@ -80,19 +80,19 @@ const AdminStock = () => {
     }
   }
 
-  const getStockStatus = () => {
-    // A low stock alert threshold can be added to the model later if needed.
+  const getStockStatus = (currentCaja) => {
+    if (!currentCaja) return { color: '', bg: '', status: 'N/A' }; // Handle null caja
     const lowStockAlert = 10;
-    if (caja.stock <= lowStockAlert) {
+    if (currentCaja.stock <= lowStockAlert) {
       return { color: 'text-red-600', bg: 'bg-red-100', status: 'Stock Bajo' }
-    } else if (caja.stock <= lowStockAlert * 2) {
+    } else if (currentCaja.stock <= lowStockAlert * 2) {
       return { color: 'text-yellow-600', bg: 'bg-yellow-100', status: 'Stock Medio' }
     } else {
       return { color: 'text-green-600', bg: 'bg-green-100', status: 'Stock Alto' }
     }
   }
 
-  const stockStatus = getStockStatus()
+  const stockStatus = caja ? getStockStatus(caja) : { color: '', bg: '', status: 'N/A' };
 
   if (loading) {
     return <Uilayout isAdmin={true}><div className="text-center p-8">Cargando...</div></Uilayout>

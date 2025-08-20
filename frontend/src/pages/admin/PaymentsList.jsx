@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import Uilayout from '../../components/layout/Layout'
+import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import { Search, CheckCircle, X, Eye, ChevronLeft, ChevronRight, Download } from 'lucide-react'
