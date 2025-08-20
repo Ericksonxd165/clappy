@@ -102,7 +102,7 @@ const ClientPayment = () => {
   };
 
   return (
-    <Layout>
+
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">Realizar Pago</h1>
@@ -209,7 +209,7 @@ const ClientPayment = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    
   );
 };
 

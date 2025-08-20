@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import caja, cajaPersona, Notification
+from .models import caja, cajaPersona, Notification, PagoMovilConfig
 
 class CajaSerializer(serializers.ModelSerializer):
     sold = serializers.IntegerField(read_only=True)

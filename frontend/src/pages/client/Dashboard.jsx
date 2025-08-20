@@ -49,113 +49,110 @@ const ClientDashboard = () => {
  
   
   return (
-    <Layout>
-      <div className="space-y-6">
-        {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">¡Bienvenido a Clappy!</h1>
-          <p className="text-red-100">Gestiona tus pagos de caja clap de manera fácil y segura</p>
-        </div>
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
+        <h1 className="text-2xl font-bold mb-2">¡Bienvenido a Clappy!</h1>
+        <p className="text-red-100">Gestiona tus pagos de caja clap de manera fácil y segura</p>
+      </div>
 
-        {/* Stats Cards */}
-        <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <Package className="h-6 w-6 text-red-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Cajas Disponibles</p>
-                  <p className="text-2xl font-bold text-gray-900">{dashboardData.availableBoxes}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Precio por Caja</p>
-                  <p className="text-2xl font-bold text-gray-900">${dashboardData.boxPrice}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className={`p-2 rounded-lg ${
-                  userPaymentStatus === 'paid' ? 'bg-green-100' :
-                  userPaymentStatus === 'pending' ? 'bg-yellow-100' : 'bg-gray-100'
-                }`}>
-                  {userPaymentStatus === 'paid' ? (
-                    <CheckCircle className="h-6 w-6 text-green-600" />
-                  ) : (
-                    <Clock className="h-6 w-6 text-yellow-600" />
-                  )}
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Estado de Pago</p>
-                  <p className={`text-sm font-bold ${
-                    userPaymentStatus === 'paid' ? 'text-green-600' :
-                    userPaymentStatus === 'pending' ? 'text-yellow-600' : 'text-gray-600'
-                  }`}>
-                    {userPaymentStatus === 'paid' ? 'Pagado' :
-                     userPaymentStatus === 'pending' ? 'Pendiente' : 'Sin Pago'}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Payment Status Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Estado de tu Pago</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PaymentStatus payments={userPayments} />
-            </CardContent>
-          </Card>
-
-          <NotificationPanel notifications={notifications} />
-        </div>
-
-        {/* Quick Actions */}
+      {/* Stats Cards */}
+      <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Acciones Rápidas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button className="w-full">
-                <CreditCard className="h-4 w-4 mr-2" />
-                Realizar Pago
-              </Button>
-              <Button variant="outline" className="w-full">
-                <User className="h-4 w-4 mr-2" />
-                Ver Perfil
-              </Button>
-              <Button variant="ghost" className="w-full">
-                <Package className="h-4 w-4 mr-2" />
-                Historial
-              </Button>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <Package className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Cajas Disponibles</p>
+                <p className="text-2xl font-bold text-gray-900">{dashboardData.availableBoxes}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <DollarSign className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Precio por Caja</p>
+                <p className="text-2xl font-bold text-gray-900">${dashboardData.boxPrice}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className={`p-2 rounded-lg ${
+                userPaymentStatus === 'paid' ? 'bg-green-100' :
+                userPaymentStatus === 'pending' ? 'bg-yellow-100' : 'bg-gray-100'
+              }`}>
+                {userPaymentStatus === 'paid' ? (
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                ) : (
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                )}
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Estado de Pago</p>
+                <p className={`text-sm font-bold ${
+                  userPaymentStatus === 'paid' ? 'text-green-600' :
+                  userPaymentStatus === 'pending' ? 'text-yellow-600' : 'text-gray-600'
+                }`}>
+                  {userPaymentStatus === 'paid' ? 'Pagado' :
+                   userPaymentStatus === 'pending' ? 'Pendiente' : 'Sin Pago'}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
-    </Layout>
-  )
-}
+
+      {/* Payment Status Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Estado de tu Pago</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PaymentStatus payments={userPayments} />
+          </CardContent>
+        </Card>
+
+        <NotificationPanel notifications={notifications} />
+      </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Acciones Rápidas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button className="w-full">
+              <CreditCard className="h-4 w-4 mr-2" />
+              Realizar Pago
+            </Button>
+            <Button variant="outline" className="w-full">
+              <User className="h-4 w-4 mr-2" />
+              Ver Perfil
+            </Button>
+            <Button variant="ghost" className="w-full">
+              <Package className="h-4 w-4 mr-2" />
+              Historial
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+) }
 
 const PaymentStatus = ({ payments }) => {
   const lastPayment = payments.length > 0 ? payments[payments.length - 1] : null;

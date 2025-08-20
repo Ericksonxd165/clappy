@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
 import { Package, DollarSign, Plus, Minus, Save, History, TrendingUp, AlertTriangle } from 'lucide-react'
 import { getCaja, updateCaja, createCaja, getPagoMovilConfig, updatePagoMovilConfig } from '../../api/box.api'
+import { venezuelanBanks, handleNumericInput, phoneRegex, cedulaRegex } from '../../utils/validations'
+
+const pagoMovilSchema = z.object({
+  cedula: z.string().regex(cedulaRegex, 'La cédula debe tener entre 7 y 8 dígitos numéricos'),
+  telefono: z.string().regex(phoneRegex, 'El formato del teléfono no es válido (04XX-XXXXXXX)'),
+  banco: z.string().min(1, 'Debes seleccionar un banco'),
+});
 
 const AdminStock = () => {
   const [caja, setCaja] = useState(null)
@@ -13,11 +23,23 @@ const AdminStock = () => {
 
   const [newPrice, setNewPrice] = useState('')
   const [stockAdjustment, setStockAdjustment] = useState(0)
-  const [adjustmentReason, setAdjustmentReason] = useState('')
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [isUpdatingStock, setIsUpdatingStock] = useState(false)
-  const [pagoMovilConfig, setPagoMovilConfig] = useState({ id: null, cedula: '', telefono: '', banco: '' })
   const [isUpdatingPagoMovil, setIsUpdatingPagoMovil] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(pagoMovilSchema),
+    defaultValues: {
+      cedula: '',
+      telefono: '',
+      banco: '',
+    }
+  });
 
   const fetchCaja = async () => {
     try {
@@ -61,7 +83,11 @@ const AdminStock = () => {
   const fetchPagoMovilConfig = async () => {
     try {
       const res = await getPagoMovilConfig()
-      setPagoMovilConfig(res.data)
+      if (res.data) {
+        setValue('cedula', res.data.cedula, { shouldValidate: true })
+        setValue('telefono', res.data.telefono, { shouldValidate: true })
+        setValue('banco', res.data.banco, { shouldValidate: true })
+      }
     } catch (error) {
       console.error("Error al cargar la configuración de Pago Móvil", error)
     }
@@ -117,11 +143,11 @@ const AdminStock = () => {
     }
   }
 
-  const handlePagoMovilConfigUpdate = async (e) => {
-    e.preventDefault()
+  const onPagoMovilConfigUpdate = async (data) => {
     setIsUpdatingPagoMovil(true)
     try {
-      await updatePagoMovilConfig(pagoMovilConfig.id, pagoMovilConfig)
+      const configRes = await getPagoMovilConfig();
+      await updatePagoMovilConfig(configRes.data.id, data)
       alert('Configuración de Pago Móvil actualizada')
     } catch (error) {
       alert('Error al actualizar la configuración de Pago Móvil')
@@ -368,25 +394,37 @@ const AdminStock = () => {
             <CardTitle>Configuración de Pago Móvil</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handlePagoMovilConfigUpdate} className="space-y-4">
+            <form onSubmit={handleSubmit(onPagoMovilConfigUpdate)} className="space-y-4">
               <Input
                 label="Cédula"
-                value={pagoMovilConfig.cedula}
-                onChange={(e) => setPagoMovilConfig({...pagoMovilConfig, cedula: e.target.value})}
-                placeholder="V-12345678"
+                {...register('cedula')}
+                onInput={handleNumericInput}
+                maxLength={8}
+                placeholder="12345678"
+                error={errors.cedula?.message}
               />
               <Input
                 label="Teléfono"
-                value={pagoMovilConfig.telefono}
-                onChange={(e) => setPagoMovilConfig({...pagoMovilConfig, telefono: e.target.value})}
-                placeholder="0412-1234567"
+                {...register('telefono')}
+                onInput={handleNumericInput}
+                maxLength={11}
+                placeholder="04121234567"
+                error={errors.telefono?.message}
               />
-              <Input
-                label="Banco"
-                value={pagoMovilConfig.banco}
-                onChange={(e) => setPagoMovilConfig({...pagoMovilConfig, banco: e.target.value})}
-                placeholder="Nombre del Banco"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Banco</label>
+                <select
+                  {...register('banco')}
+                  className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                    errors.banco ? 'border-red-500' : ''
+                  }`}>
+                  <option value="">Selecciona un banco</option>
+                  {Object.keys(venezuelanBanks).map(bankName => (
+                    <option key={bankName} value={bankName}>{bankName}</option>
+                  ))}
+                </select>
+                {errors.banco && <p className="text-sm text-red-600">{errors.banco.message}</p>}
+              </div>
               <Button type="submit" disabled={isUpdatingPagoMovil}>
                 {isUpdatingPagoMovil ? 'Guardando...' : 'Guardar Configuración'}
               </Button>
