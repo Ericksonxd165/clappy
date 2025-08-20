@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import Modal from '../UI/Modal';
-import Input from '../UI/Input';
-import Button from '../UI/Button';
+import Modal from '../../components/UI/Modal';
+import Input from '../../components/UI/Input';
+import Button from '../../components/UI/Button';
 
 const userSchema = z.object({
   username: z.string().min(1, 'El nombre de usuario es requerido'),
