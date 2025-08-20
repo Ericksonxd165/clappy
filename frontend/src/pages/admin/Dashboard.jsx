@@ -173,7 +173,7 @@ const AdminDashboard = () => {
                 <CreditCard className="h-4 w-4 mr-2" />
                 Ver Pagos
               </Button>
-              <Button variant="ghost" className="w-full">
+              <Button variant="ghost" className="w-full" onClick={() => navigate('/admin/users')}>
                 <Users className="h-4 w-4 mr-2" />
                 Gestionar Usuarios
               </Button>

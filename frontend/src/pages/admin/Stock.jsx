@@ -4,7 +4,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Ca
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
 import { Package, DollarSign, Plus, Minus, Save, History, TrendingUp, AlertTriangle } from 'lucide-react'
-import { getCaja, updateCaja, createCaja } from '../../api/box.api'
+import { getCaja, updateCaja, createCaja, getPagoMovilConfig, updatePagoMovilConfig } from '../../api/box.api'
 
 const AdminStock = () => {
   const [caja, setCaja] = useState(null)
@@ -16,6 +16,8 @@ const AdminStock = () => {
   const [adjustmentReason, setAdjustmentReason] = useState('')
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [isUpdatingStock, setIsUpdatingStock] = useState(false)
+  const [pagoMovilConfig, setPagoMovilConfig] = useState({ id: null, cedula: '', telefono: '', banco: '' })
+  const [isUpdatingPagoMovil, setIsUpdatingPagoMovil] = useState(false)
 
   const fetchCaja = async () => {
     try {
@@ -53,7 +55,17 @@ const AdminStock = () => {
 
   useEffect(() => {
     fetchCaja()
+    fetchPagoMovilConfig()
   }, [])
+
+  const fetchPagoMovilConfig = async () => {
+    try {
+      const res = await getPagoMovilConfig()
+      setPagoMovilConfig(res.data)
+    } catch (error) {
+      console.error("Error al cargar la configuración de Pago Móvil", error)
+    }
+  }
 
   const handlePriceUpdate = async () => {
     if (newPrice <= 0) {
@@ -92,6 +104,29 @@ const AdminStock = () => {
       alert('Error al actualizar el stock')
     } finally {
       setIsUpdatingStock(false)
+    }
+  }
+
+  const handleTogglePayments = async () => {
+    try {
+      await updateCaja(caja.id, { ...caja, payments_enabled: !caja.payments_enabled })
+      await fetchCaja()
+      alert('Estado de los pagos actualizado')
+    } catch (error) {
+      alert('Error al actualizar el estado de los pagos')
+    }
+  }
+
+  const handlePagoMovilConfigUpdate = async (e) => {
+    e.preventDefault()
+    setIsUpdatingPagoMovil(true)
+    try {
+      await updatePagoMovilConfig(pagoMovilConfig.id, pagoMovilConfig)
+      alert('Configuración de Pago Móvil actualizada')
+    } catch (error) {
+      alert('Error al actualizar la configuración de Pago Móvil')
+    } finally {
+      setIsUpdatingPagoMovil(false)
     }
   }
 
@@ -135,7 +170,7 @@ const AdminStock = () => {
       <div className="space-y-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">Gestión de Stock</h1>
+          <h1 className="text-2xl font-bold mb-2">Gestión de Cajas</h1>
           <p className="text-red-100">Administra el inventario y precios de las cajas</p>
         </div>
 
@@ -178,24 +213,9 @@ const AdminStock = () => {
                   <TrendingUp className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Cajas Vendidas</p>
-                  <p className="text-2xl font-bold text-gray-900">{caja.sold}</p>
+                  <p className="text-sm font-medium text-gray-600">Cajas Entregadas</p>
+                  <p className="text-2xl font-bold text-gray-900">{caja.delivered_count}</p>
                   <p className="text-xs text-blue-600">Total</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-purple-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Ingresos (Estimado)</p>
-                  <p className="text-2xl font-bold text-gray-900">${(caja.sold * parseFloat(caja.price)).toFixed(2)}</p>
-                  <p className="text-xs text-purple-600">Total</p>
                 </div>
               </div>
             </CardContent>
@@ -220,7 +240,7 @@ const AdminStock = () => {
         )}
 
         {/* Management Controls */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Price Management */}
           <Card>
             <CardHeader>
@@ -260,6 +280,23 @@ const AdminStock = () => {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Status Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Estado de los Pagos</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center justify-between">
+                  <span className={`font-bold ${caja.payments_enabled ? 'text-green-600' : 'text-red-600'}`}>
+                    {caja.payments_enabled ? 'Pagos Habilitados' : 'Pagos Deshabilitados'}
+                  </span>
+                  <Button onClick={handleTogglePayments}>
+                    {caja.payments_enabled ? 'Deshabilitar' : 'Habilitar'}
+                  </Button>
+                </div>
             </CardContent>
           </Card>
 
@@ -324,6 +361,38 @@ const AdminStock = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Pago Movil Config */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuración de Pago Móvil</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePagoMovilConfigUpdate} className="space-y-4">
+              <Input
+                label="Cédula"
+                value={pagoMovilConfig.cedula}
+                onChange={(e) => setPagoMovilConfig({...pagoMovilConfig, cedula: e.target.value})}
+                placeholder="V-12345678"
+              />
+              <Input
+                label="Teléfono"
+                value={pagoMovilConfig.telefono}
+                onChange={(e) => setPagoMovilConfig({...pagoMovilConfig, telefono: e.target.value})}
+                placeholder="0412-1234567"
+              />
+              <Input
+                label="Banco"
+                value={pagoMovilConfig.banco}
+                onChange={(e) => setPagoMovilConfig({...pagoMovilConfig, banco: e.target.value})}
+                placeholder="Nombre del Banco"
+              />
+              <Button type="submit" disabled={isUpdatingPagoMovil}>
+                {isUpdatingPagoMovil ? 'Guardando...' : 'Guardar Configuración'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   )

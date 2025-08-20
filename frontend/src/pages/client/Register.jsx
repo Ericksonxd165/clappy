@@ -1,149 +1,62 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import Button from '../../components/UI/Button'
-import Input from '../../components/UI/Input'
-import { Eye, EyeOff, UserPlus, User, Mail, Phone, MapPin } from 'lucide-react'
-import { registerUser } from '../../api/users.api'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import Button from '../../components/UI/Button';
+import Input from '../../components/UI/Input';
+import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { registerUser } from '../../api/users.api';
+
+const registerSchema = z.object({
+  username: z.string().min(1, 'El nombre de usuario es requerido'),
+  fullname: z.string().min(1, 'El nombre es requerido').regex(/^[a-zA-Z\s]+$/, 'El nombre solo puede contener letras'),
+  email: z.string().email('Correo electrónico no válido'),
+  phone: z.string().min(1, 'El teléfono es requerido').regex(/^04(12|14|16|24|26)\d{7}$/, 'El formato del teléfono no es válido (04XX-XXXXXXX)'),
+  cedula: z.string().min(7, 'La cédula debe tener entre 7 y 8 dígitos').max(8, 'La cédula debe tener entre 7 y 8 dígitos').regex(/^\d+$/, 'La cédula solo puede contener números'),
+  address: z.string().min(1, 'La dirección es requerida'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  password2: z.string(),
+  terms: z.boolean().refine(val => val === true, { message: 'Debes aceptar los términos y condiciones' })
+}).refine(data => data.password === data.password2, {
+  message: 'Las contraseñas no coinciden',
+  path: ['password2'],
+});
 
 const ClientRegister = () => {
-  const [formData, setFormData] = useState({
-    username:'',
-    fullname: '',
-    email: '',
-    phone: '',
-    cedula: '',
-    address: '',
-    password: '',
-    password2: ''
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [errors, setErrors] = useState({})
-  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [serverError, setServerError] = useState('');
+  const navigate = useNavigate();
 
-
-
-
-
-
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-     
-    if(name==='phone'){
-         if(/^\d{0,11}$/.test(value)){
-              
-           setFormData(prev=>({
-          ...prev,
-          [name]:value
-        }))
-      }
-    
-    }else
-
-    if(name==='cedula'){
-
-      if(/^\d{0,8}$/.test(value)){
-
-           setFormData(prev=>({
-          ...prev,
-          [name]:value
-        }))
-      }
-    }
-    else{ 
-
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }))
-    }
-  }}
-
- const validateForm = () => {
-  const newErrors = {}
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(registerSchema),
+  });
   
-  if (!formData.fullname.trim()) {
-    newErrors.fullname = 'El nombre es requerido'
-  }
-  
-   if (!formData.username) {
-    newErrors.username = 'El nombre de usuario es requerido'
-  } 
+  const handleNumericInput = (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+  };
 
-  if (!formData.email) {
-    newErrors.email = 'El email es requerido'
-  } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-    newErrors.email = 'El email no es válido'
-  }
-  
-  if (!formData.phone) {
-    newErrors.phone = 'El teléfono es requerido'
-  }
-  
-  if (!formData.cedula) {
-    newErrors.cedula = 'La cédula es requerida'
-  } else if (!/^\d{7,8}$/.test(formData.cedula)) {
-    newErrors.cedula = 'La cédula debe tener entre 7 y 8 dígitos'
-  }
-  
-  if (!formData.password) {
-    newErrors.password = 'La contraseña es requerida'
-  } else if (formData.password.length < 6) {
-    newErrors.password = 'La contraseña debe tener al menos 6 caracteres'
-  }
-  
-  if (!formData.password2) {
-    newErrors.password2 = 'Confirma tu contraseña'
-  } else if (formData.password !== formData.password2) {
-    newErrors.password2 = 'Las contraseñas no coinciden'
-  }
-  
-  return newErrors
-}
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    const newErrors = validateForm()
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
-    }
-    
-    setIsLoading(true)
-
+  const onSubmit = async (data) => {
+    setServerError('');
     const submissionData = {
-      ...formData,
-      address: `urb ciudad varyna, ${formData.address}`
-    }
-    
+      ...data,
+      address: `urb ciudad varyna, ${data.address}`,
+    };
+
     try {
-      await registerUser(submissionData)
-      
-      console.log('Registration successful:', submissionData)
-      
-      // Redirect to login
-      window.location.href = '/login'
-      
+      await registerUser(submissionData);
+      alert('¡Registro exitoso! Serás redirigido a la página de inicio de sesión.');
+      navigate('/login');
     } catch (error) {
-      setErrors({ general: 'Error al crear la cuenta. Intenta nuevamente.' })
-      console.error(error)
-    } finally {
-      setIsLoading(false)
+      console.error(error);
+      setServerError('Error al crear la cuenta. Es posible que el usuario o el correo ya existan.');
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Logo */}
         <div className="flex justify-center">
           <div className="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center">
             <span className="text-white font-bold text-2xl">CL</span>
@@ -159,65 +72,51 @@ const ClientRegister = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {errors.general && (
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            {serverError && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-                {errors.general}
+                {serverError}
               </div>
             )}
 
             <Input
               label="Nombre de usuario"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              error={errors.username}
+              {...register("username")}
+              error={errors.username?.message}
               placeholder="Tu nombre de usuario"
-              required
             />
                  
-
-             
             <Input
               label="Nombre Completo"
-              name="fullname"
-              value={formData.fullname}
-              onChange={handleInputChange}
-              error={errors.fullname}
+              {...register("fullname")}
+              error={errors.fullname?.message}
               placeholder="Tu nombre completo"
-              required
             />
 
             <Input
               label="Email"
-              name="email"
               type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              error={errors.email}
+              {...register("email")}
+              error={errors.email?.message}
               placeholder="tu@email.com"
-              required
             />
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <Input
                 label="Teléfono"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                error={errors.phone}
-                placeholder="0414-1234567"
-                required
+                {...register("phone")}
+                onInput={handleNumericInput}
+                maxLength={11}
+                error={errors.phone?.message}
+                placeholder="04121234567"
               />
-
               <Input
                 label="Cédula"
-                name="cedula"
-                value={formData.cedula}
-                onChange={handleInputChange}
-                error={errors.cedula}
+                {...register("cedula")}
+                onInput={handleNumericInput}
+                maxLength={8}
+                error={errors.cedula?.message}
                 placeholder="12345678"
-                required
               />
             </div>
 
@@ -229,26 +128,21 @@ const ClientRegister = () => {
                 </span>
                 <input
                   type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-red-500 focus:border-red-500 sm:text-sm border-gray-300"
+                  {...register("address")}
+                  className={`flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-red-500 focus:border-red-500 sm:text-sm ${errors.address ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="Tu dirección completa"
                 />
               </div>
-              {errors.address && <p className="mt-2 text-sm text-red-600">{errors.address}</p>}
+              {errors.address && <p className="mt-2 text-sm text-red-600">{errors.address.message}</p>}
             </div>
 
             <div className="relative">
               <Input
                 label="Contraseña"
-                name="password"
                 type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={handleInputChange}
-                error={errors.password}
+                {...register("password")}
+                error={errors.password?.message}
                 placeholder="••••••••"
-                required
               />
               <button
                 type="button"
@@ -262,13 +156,10 @@ const ClientRegister = () => {
             <div className="relative">
               <Input
                 label="Confirmar Contraseña"
-                name="password2"
                 type={showConfirmPassword ? 'text' : 'password'}
-                value={formData.password2}
-                onChange={handleInputChange}
-                error={errors.confirmPassword}
+                {...register("password2")}
+                error={errors.password2?.message}
                 placeholder="••••••••"
-                required
               />
               <button
                 type="button"
@@ -279,64 +170,45 @@ const ClientRegister = () => {
               </button>
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-              />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-                Acepto los{' '}
-                <a href="#" className="text-red-600 hover:text-red-500">
-                  términos y condiciones
-                </a>
-              </label>
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="terms"
+                  type="checkbox"
+                  {...register("terms")}
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label htmlFor="terms" className="font-medium text-gray-700">
+                  Acepto los{' '}
+                  <a href="#" className="text-red-600 hover:text-red-500">
+                    términos y condiciones
+                  </a>
+                </label>
+                {errors.terms && <p className="text-red-600">{errors.terms.message}</p>}
+              </div>
             </div>
 
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creando cuenta...
-                </div>
-              ) : (
-                <div className="flex items-center justify-center">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Crear Cuenta
-                </div>
-              )}
+              {isSubmitting ? 'Creando cuenta...' : 'Crear Cuenta'}
             </Button>
           </form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">¿Ya tienes cuenta?</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Link
-                to="/login"
-                className="w-full flex justify-center py-2 px-4 border border-red-600 rounded-md shadow-sm text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Iniciar Sesión
-              </Link>
-            </div>
+          <div className="mt-6 text-center text-sm text-gray-600">
+            ¿Ya tienes una cuenta?{' '}
+            <Link to="/login" className="font-medium text-red-600 hover:text-red-500">
+              Inicia sesión
+            </Link>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ClientRegister
+export default ClientRegister;

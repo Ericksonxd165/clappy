@@ -9,10 +9,15 @@ class caja(models.Model):
         price = models.DecimalField(max_digits=10, decimal_places=2)
         stock = models.IntegerField(default=0)
         date = models.DateTimeField(auto_now_add=True)
+        payments_enabled = models.BooleanField(default=True)
 
         @property
         def sold(self):
-                return cajaPersona.objects.filter(cajaid=self).count()
+                return cajaPersona.objects.filter(cajaid=self, status='APPROVED').count()
+
+        @property
+        def delivered_count(self):
+                return cajaPersona.objects.filter(cajaid=self, delivered=True).count()
 
         def __str__(self):
                 return str(self.id)
@@ -51,3 +56,11 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.message}"
+
+class PagoMovilConfig(models.Model):
+    cedula = models.CharField(max_length=20)
+    telefono = models.CharField(max_length=20)
+    banco = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"Configuración de Pago Móvil ({self.banco})"

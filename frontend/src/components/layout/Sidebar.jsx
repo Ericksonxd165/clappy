@@ -24,13 +24,14 @@ const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
   const clientMenuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: CreditCard, label: 'Realizar Pago', path: '/payment' },
-    { icon: User, label: 'Mi Perfil', path: '/profile' },
+    { icon: BarChart3, label: 'Historial de Pagos', path: '/payment-history' },
   ]
 
   const adminMenuItems = [
     { icon: BarChart3, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: CreditCard, label: 'Lista de Pagos', path: '/admin/payments' },
-    { icon: Package, label: 'Stock de Cajas', path: '/admin/stock' },
+    { icon: Package, label: 'Gestión de Cajas', path: '/admin/stock' },
+    { icon: Users, label: 'Gestión de Usuarios', path: '/admin/users' },
   ]
 
   const menuItems = isAdmin ? adminMenuItems : clientMenuItems

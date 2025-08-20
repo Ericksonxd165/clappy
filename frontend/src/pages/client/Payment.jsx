@@ -1,139 +1,130 @@
-import { useState, useEffect } from 'react'
-import Layout from '../../components/layout/Layout'
-import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
-import Button from '../../components/UI/Button'
-import Input from '../../components/UI/Input'
-import { Smartphone, DollarSign, Upload } from 'lucide-react'
-import { createCajaPersona, getCaja } from '../../api/box.api'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import Layout from '../../components/layout/Layout';
+import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card';
+import Button from '../../components/UI/Button';
+import Input from '../../components/UI/Input';
+import { Smartphone, DollarSign, Upload } from 'lucide-react';
+import { createCajaPersona, getCaja, getPagoMovilConfig } from '../../api/box.api';
+import { useNavigate } from 'react-router-dom';
+import Modal from '../../components/UI/Modal';
+
+const paymentSchema = z.object({
+    paymentMethod: z.enum(['mobile', 'cash']),
+    reference: z.string()
+      .max(30, { message: 'La referencia no puede tener más de 30 caracteres' })
+      .optional(),
+    receipt: z.any().optional()
+  }).refine(data => {
+    if (data.paymentMethod === 'mobile') {
+      return !!data.reference && data.reference.length > 0;
+    }
+    return true;
+  }, {
+    message: 'El número de referencia es requerido para Pago Móvil',
+    path: ['reference'],
+  }).refine(data => {
+    if (data.paymentMethod === 'mobile') {
+      return !!data.receipt && data.receipt.length > 0;
+    }
+    return true;
+  }, {
+    message: 'El comprobante es requerido para Pago Móvil',
+    path: ['receipt'],
+  });
+
 
 const ClientPayment = () => {
-  const [paymentMethod, setPaymentMethod] = useState('mobile')
-  const [formData, setFormData] = useState({
-    paymentType: 'mobile',
-    // Pago Móvil fields
-    bank: '',
-    phone: '',
-    cedula: '',
-    reference: '',
-    amount: '',
-    // Efectivo fields
-    cashAmount: '',
-    notes: ''
-  })
-  const [receipt, setReceipt] = useState(null)
-  const [caja, setCaja] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const navigate = useNavigate()
+  const [caja, setCaja] = useState(null);
+  const [pagoMovilConfig, setPagoMovilConfig] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState(null);
+  const navigate = useNavigate();
+
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    resolver: zodResolver(paymentSchema),
+    defaultValues: { paymentMethod: 'mobile' }
+  });
+
+  const paymentMethod = watch('paymentMethod');
 
   useEffect(() => {
-    const fetchCaja = async () => {
+    const fetchPageData = async () => {
       try {
-        const res = await getCaja()
-        // Assuming there is only one type of caja for now
-        if (res.data.length > 0) {
-          setCaja(res.data[0])
+        const cajaRes = await getCaja();
+        if (cajaRes.data.length > 0) {
+          setCaja(cajaRes.data[0]);
         }
+        const configRes = await getPagoMovilConfig();
+        setPagoMovilConfig(configRes.data);
       } catch (err) {
-        setError("Failed to load box details.")
+        setServerError("No se pudieron cargar los detalles de la página de pago.");
       }
-    }
-    fetchCaja()
-  }, [])
+    };
+    fetchPageData();
+  }, []);
 
-  const boxPrice = caja ? parseFloat(caja.price) : 0
-  const totalAmount = 1 * boxPrice
+  const handleNumericInput = (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+  };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0]
-    setReceipt(file)
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const onSubmit = async (data) => {
     if (!caja) {
-      setError("Caja details not loaded yet. Please wait.")
-      return
-    }
-    if (paymentMethod === 'mobile' && !receipt) {
-      setError("Please upload a payment receipt.")
-      return
+      setServerError("Los detalles de la caja no están cargados. Por favor, espere.");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setServerError(null);
 
-    const data = new FormData()
-    data.append('cajaid', caja.id)
-    data.append('payment_method', paymentMethod === 'mobile' ? 'Pago Movil' : 'Efectivo')
-    data.append('amount', totalAmount)
-    data.append('moneda', 'USD') // Assuming USD for now, can be made dynamic
+    const formData = new FormData();
+    formData.append('cajaid', caja.id);
+    formData.append('payment_method', data.paymentMethod === 'mobile' ? 'Pago Movil' : 'Efectivo');
+    formData.append('amount', caja.price);
+    formData.append('moneda', 'USD');
 
-    if (paymentMethod === 'mobile') {
-      data.append('reference', formData.reference)
-      data.append('img', receipt)
+    if (data.paymentMethod === 'mobile') {
+      formData.append('reference', data.reference);
+      formData.append('img', data.receipt[0]);
     }
 
     try {
-      await createCajaPersona(data)
-      navigate('/dashboard') // Redirect to dashboard on success
+      await createCajaPersona(formData);
+      navigate('/dashboard');
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.error) {
-        setError(err.response.data.error)
-      } else {
-        setError("Failed to submit payment. Please try again.")
-      }
-      console.error(err)
+      setServerError(err.response?.data?.error || "Error al procesar el pago. Intente de nuevo.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">Realizar Pago</h1>
           <p className="text-red-100">Completa tu pago de manera segura</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Payment Form */}
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle>Información de Pago</CardTitle>
               </CardHeader>
               <CardContent>
-                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Método de Pago */}
+                {serverError && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{serverError}</div>}
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-4">
-                      Método de Pago
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">Método de Pago</label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <button
                         type="button"
-                        onClick={() => {
-                          setPaymentMethod('mobile')
-                          setFormData(prev => ({ ...prev, paymentType: 'mobile' }))
-                        }}
-                        className={`p-4 border-2 rounded-lg flex items-center space-x-3 transition-colors ${
-                          paymentMethod === 'mobile' 
-                            ? 'border-red-600 bg-red-50' 
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
+                        onClick={() => setValue('paymentMethod', 'mobile')}
+                        className={`p-4 border-2 rounded-lg flex items-center space-x-3 transition-colors ${paymentMethod === 'mobile' ? 'border-red-600 bg-red-50' : 'border-gray-300 hover:border-gray-400'}`}
                       >
                         <Smartphone className="h-6 w-6 text-red-600" />
                         <div className="text-left">
@@ -141,18 +132,10 @@ const ClientPayment = () => {
                           <p className="text-sm text-gray-600">Transferencia bancaria</p>
                         </div>
                       </button>
-
                       <button
                         type="button"
-                        onClick={() => {
-                          setPaymentMethod('cash')
-                          setFormData(prev => ({ ...prev, paymentType: 'cash' }))
-                        }}
-                        className={`p-4 border-2 rounded-lg flex items-center space-x-3 transition-colors ${
-                          paymentMethod === 'cash' 
-                            ? 'border-red-600 bg-red-50' 
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
+                        onClick={() => setValue('paymentMethod', 'cash')}
+                        className={`p-4 border-2 rounded-lg flex items-center space-x-3 transition-colors ${paymentMethod === 'cash' ? 'border-red-600 bg-red-50' : 'border-gray-300 hover:border-gray-400'}`}
                       >
                         <DollarSign className="h-6 w-6 text-red-600" />
                         <div className="text-left">
@@ -163,161 +146,62 @@ const ClientPayment = () => {
                     </div>
                   </div>
 
-                  {/* Formulario Pago Móvil */}
                   {paymentMethod === 'mobile' && (
                     <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                       <h3 className="font-medium text-gray-900">Datos del Pago Móvil</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          label="Banco"
-                          name="bank"
-                          value={formData.bank}
-                          onChange={handleInputChange}
-                          placeholder="Ej: Banesco, Mercantil..."
-                          required
-                        />
-                        <Input
-                          label="Teléfono"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          placeholder="0414-1234567"
-                          required
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          label="Cédula"
-                          name="cedula"
-                          value={formData.cedula}
-                          onChange={handleInputChange}
-                          placeholder="12345678"
-                          required
-                        />
-                        <Input
-                          label="Monto"
-                          name="amount"
-                          value={formData.amount}
-                          onChange={handleInputChange}
-                          placeholder={`$${totalAmount}`}
-                          required
-                        />
-                      </div>
-
                       <Input
                         label="Número de Referencia"
-                        name="reference"
-                        value={formData.reference}
-                        onChange={handleInputChange}
+                        {...register("reference")}
+                        onInput={handleNumericInput}
+                        maxLength={30}
                         placeholder="123456789"
-                        required
+                        error={errors.reference?.message}
                       />
-
-                      {/* Upload Receipt */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Comprobante de Pago
-                        </label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                          <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-600 mb-2">
-                            Arrastra tu comprobante aquí o haz clic para seleccionar
-                          </p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            id="receipt-upload"
-                          />
-                          <label
-                            htmlFor="receipt-upload"
-                            className="cursor-pointer text-red-600 hover:text-red-700 font-medium"
-                          >
-                            Seleccionar archivo
-                          </label>
-                          {receipt && (
-                            <p className="text-sm text-green-600 mt-2">
-                              Archivo seleccionado: {receipt.name}
-                            </p>
-                          )}
-                        </div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Comprobante de Pago</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          {...register("receipt")}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                        />
+                         {errors.receipt && <p className="mt-2 text-sm text-red-600">{errors.receipt.message}</p>}
                       </div>
                     </div>
                   )}
 
-                  {/* Formulario Efectivo */}
                   {paymentMethod === 'cash' && (
                     <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                       <h3 className="font-medium text-gray-900">Pago en Efectivo</h3>
-                      
-                      <Input
-                        label="Monto en Efectivo"
-                        name="cashAmount"
-                        value={formData.cashAmount}
-                        onChange={handleInputChange}
-                        placeholder={`$${totalAmount}`}
-                        required
-                      />
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Notas Adicionales
-                        </label>
-                        <textarea
-                          name="notes"
-                          value={formData.notes}
-                          onChange={handleInputChange}
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                          placeholder="Información adicional sobre el pago..."
-                        />
-                      </div>
+                      <p className="text-sm text-gray-600">Por favor, diríjase a la oficina para realizar su pago en efectivo.</p>
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Enviando...' : 'Confirmar Pago'}
+                  <Button type="submit" className="w-full" disabled={loading || !caja}>
+                    {loading ? 'Enviando...' : `Confirmar Pago de $${caja?.price || '...'}`}
                   </Button>
                 </form>
               </CardContent>
             </Card>
           </div>
-
-          {/* Payment Summary */}
           <div>
             <Card>
-              <CardHeader>
-                <CardTitle>Resumen del Pago</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Resumen del Pago</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Cantidad de cajas:</span>
                     <span className="font-medium">1</span>
                   </div>
-                  
                   <div className="flex justify-between">
                     <span className="text-gray-600">Precio por caja:</span>
-                    <span className="font-medium">${boxPrice}</span>
+                    <span className="font-medium">${caja?.price || '0.00'}</span>
                   </div>
-                  
                   <div className="border-t pt-4">
                     <div className="flex justify-between">
                       <span className="text-lg font-semibold">Total:</span>
-                      <span className="text-lg font-bold text-red-600">${totalAmount}</span>
+                      <span className="text-lg font-bold text-red-600">${caja?.price || '0.00'}</span>
                     </div>
-                  </div>
-
-                  <div className="bg-red-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-red-900 mb-2">Información Importante:</h4>
-                    <ul className="text-sm text-red-700 space-y-1">
-                      <li>• El pago será verificado en 24-48 horas</li>
-                      <li>• Guarda tu comprobante de pago</li>
-                      <li>• Recibirás una notificación de confirmación</li>
-                    </ul>
                   </div>
                 </div>
               </CardContent>
@@ -326,7 +210,7 @@ const ClientPayment = () => {
         </div>
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default ClientPayment
+export default ClientPayment;

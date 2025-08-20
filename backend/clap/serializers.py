@@ -2,10 +2,12 @@ from rest_framework import serializers
 from .models import caja, cajaPersona, Notification
 
 class CajaSerializer(serializers.ModelSerializer):
+    sold = serializers.IntegerField(read_only=True)
+    delivered_count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = caja
-        fields = '__all__'
-        read_only_fields = ('sold',)
+        fields = ['id', 'price', 'stock', 'date', 'payments_enabled', 'sold', 'delivered_count']
 
 class CajaPersonaSerializer(serializers.ModelSerializer):
     PAYMENT_METHOD_CHOICES = [
@@ -43,3 +45,8 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = '__all__'
         read_only_fields = ('user',)
+
+class PagoMovilConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PagoMovilConfig
+        fields = '__all__'

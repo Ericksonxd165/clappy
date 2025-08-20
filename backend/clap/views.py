@@ -3,8 +3,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from .models import caja, cajaPersona, Notification
-from .serializers import CajaSerializer, CajaPersonaSerializer, NotificationSerializer
+from .models import caja, cajaPersona, Notification, PagoMovilConfig
+from .serializers import CajaSerializer, CajaPersonaSerializer, NotificationSerializer, PagoMovilConfigSerializer
 from users.models import UsersCustom
 
 # Create your views here.
@@ -46,19 +46,31 @@ class CajaPersonaViewSet(viewsets.ModelViewSet):
         return cajaPersona.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        # Check if the user already has a caja
-        if cajaPersona.objects.filter(user=request.user).exists():
-            return Response(
-                {"error": "Solo puedes tener una caja por persona."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Ensure there is a main box created by an admin
-        main_caja = caja.objects.first()
+        main_caja = caja.objects.order_by('-date').first()
         if not main_caja:
             return Response(
                 {"error": "No hay una caja principal disponible."},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check if the user already has a pending or approved payment for this season's box
+        existing_payment = cajaPersona.objects.filter(
+            user=request.user,
+            cajaid=main_caja,
+            status__in=['PENDING', 'APPROVED']
+        ).exists()
+
+        if existing_payment:
+            return Response(
+                {"error": "Ya tienes un pago registrado para la caja de esta temporada."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check if payments are enabled
+        if not main_caja.payments_enabled:
+            return Response(
+                {"error": "Los pagos se encuentran deshabilitados en este momento."},
+                status=status.HTTP_403_FORBIDDEN
             )
 
         # Check if there is enough stock
@@ -119,3 +131,40 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         notification.read = True
         notification.save()
         return Response({'status': 'Notification marked as read'})
+
+class PagoMovilConfigViewSet(viewsets.ModelViewSet):
+    queryset = PagoMovilConfig.objects.all()
+    serializer_class = PagoMovilConfigSerializer
+    permission_classes = [IsAdminUser]
+
+    def list(self, request, *args, **kwargs):
+        config, created = PagoMovilConfig.objects.get_or_create(
+            id=1,
+            defaults={'cedula': '', 'telefono': '', 'banco': ''}
+        )
+        serializer = self.get_serializer(config)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        # Always return the singleton instance
+        return self.list(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        # Prevent creating more than one instance
+        if PagoMovilConfig.objects.count() > 0 and 'id' not in request.data:
+             return Response(
+                {"error": "La configuración de Pago Móvil ya existe."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        # The 'pk' will be passed in the URL, but we always update the singleton.
+        instance = PagoMovilConfig.objects.first()
+        if not instance:
+            instance = PagoMovilConfig.objects.create(cedula="", telefono="", banco="")
+
+        serializer = self.get_serializer(instance, data=request.data, partial=kwargs.pop('partial', False))
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)

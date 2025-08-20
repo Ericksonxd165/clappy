@@ -54,4 +54,10 @@ api.interceptors.response.use(
   export const loginUser = (credentials) => api.post('login/',credentials);
   export const refreshToken = (token) => axios.post(`${BASE}/users/api/v1/token/refresh/`, { refresh: token});
 
+  // User management by admin
+  export const listUsers = () => api.get('users/');
+  export const createUser = (userData) => api.post('users/', userData);
+  export const updateUser = (id, userData) => api.put(`users/${id}/`, userData);
+  export const deleteUser = (id) => api.delete(`users/${id}/`);
+
   export default api;

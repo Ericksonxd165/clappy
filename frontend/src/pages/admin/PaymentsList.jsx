@@ -129,6 +129,33 @@ const AdminPaymentsList = () => {
     setShowReceiptModal(true)
   }
 
+  const exportToCSV = () => {
+    const headers = ['ID', 'Usuario', 'Email', 'Método de Pago', 'Referencia', 'Monto', 'Fecha', 'Estado', 'Entregado'];
+    const rows = filteredPayments.map(p => [
+      p.id,
+      p.user?.username,
+      p.user?.email,
+      p.payment_method,
+      p.reference,
+      p.amount,
+      new Date(p.date).toLocaleDateString(),
+      p.status,
+      p.delivered
+    ].map(field => `"${String(field).replace(/"/g, '""')}"`)); // Escape quotes
+
+    let csvContent = "data:text/csv;charset=utf-8,"
+        + headers.join(",") + "\n"
+        + rows.map(e => e.join(",")).join("\n");
+
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "pagos.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   if (loading) {
     return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Layout>
   }
@@ -175,33 +202,40 @@ const AdminPaymentsList = () => {
                 </select>
               </div>
 
-              {/* Bulk Actions */}
-              {selectedPayments.length > 0 && (
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    onClick={() => handleBulkAction('approve')}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    Aprobar ({selectedPayments.length})
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleBulkAction('deliver')}
-                  >
-                    Marcar Entregado
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleBulkAction('reject')}
-                    className="text-red-600 border-red-600 hover:bg-red-50"
-                  >
-                    Rechazar
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center space-x-4">
+                <Button onClick={exportToCSV} variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar CSV
+                </Button>
+
+                {/* Bulk Actions */}
+                {selectedPayments.length > 0 && (
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleBulkAction('approve')}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Aprobar ({selectedPayments.length})
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleBulkAction('deliver')}
+                    >
+                      Marcar Entregado
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleBulkAction('reject')}
+                      className="text-red-600 border-red-600 hover:bg-red-50"
+                    >
+                      Rechazar
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

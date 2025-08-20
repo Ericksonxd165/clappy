@@ -36,4 +36,7 @@ export const confirmDelivery = (id)=> { return api.post(`/cajaspersona/${id}/con
 export const getNotifications = ()=> { return api.get('/notifications/') }
 export const markNotificationAsRead = (id)=> { return api.post(`/notifications/${id}/mark_as_read/`) }
 
+export const getPagoMovilConfig = ()=> { return api.get('/pago-movil-config/') }
+export const updatePagoMovilConfig = (id, data)=> { return api.put(`/pago-movil-config/${id}/`, data) }
+
 export default api

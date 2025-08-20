@@ -35,5 +35,5 @@ class Custom_token_obtain_pair_view(TokenObtainPairView):
 class UserView(viewsets.ModelViewSet):
     serializer_class=UserSerializer
     queryset=UsersCustom.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 

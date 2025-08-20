@@ -1,68 +1,78 @@
-import { useState, useEffect } from 'react'
-import Layout from '../../components/layout/Layout'
-import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
-import Button from '../../components/UI/Button'
-import Input from '../../components/UI/Input'
-import { User, Mail, Phone, MapPin, Save, Edit3 } from 'lucide-react'
-import { getCurrentUser, updateCurrentUser } from '../../api/users.api'
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import Layout from '../../components/layout/Layout';
+import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card';
+import Button from '../../components/UI/Button';
+import Input from '../../components/UI/Input';
+import { User, Mail, Phone, MapPin, Save, Edit3 } from 'lucide-react';
+import { getCurrentUser, updateCurrentUser } from '../../api/users.api';
+
+const profileSchema = z.object({
+  fullname: z.string().min(1, 'El nombre es requerido').regex(/^[a-zA-Z\s]+$/, 'El nombre solo puede contener letras'),
+  email: z.string().email('Correo electrónico no válido'),
+  phone: z.string().min(1, 'El teléfono es requerido').regex(/^04(12|14|16|24|26)\d{7}$/, 'El formato del teléfono no es válido (04XX-XXXXXXX)'),
+  cedula: z.string().min(7, 'La cédula debe tener entre 7 y 8 dígitos').max(8, 'La cédula debe tener entre 7 y 8 dígitos').regex(/^\d+$/, 'La cédula solo puede contener números'),
+  address: z.string().min(1, 'La dirección es requerida'),
+});
 
 const ClientProfile = () => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [profileData, setProfileData] = useState(null)
-  const [formData, setFormData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    resolver: zodResolver(profileSchema),
+  });
 
   const fetchUser = async () => {
     try {
-      setLoading(true)
-      const res = await getCurrentUser()
-      setProfileData(res.data)
-      setFormData(res.data)
+      setLoading(true);
+      const res = await getCurrentUser();
+      setProfileData(res.data);
+      reset(res.data); // Set form default values
     } catch (err) {
-      setError('Error al cargar el perfil.')
-      console.error(err)
+      setError('Error al cargar el perfil.');
+      console.error(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchUser()
-  }, [])
+    fetchUser();
+  }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleSave = async () => {
+  const onSave = async (data) => {
     try {
-      const { fullname, email, phone, cedula, address } = formData;
-      const dataToUpdate = { fullname, email, phone, cedula, address };
-      const res = await updateCurrentUser(dataToUpdate)
-      setProfileData(res.data)
-      setIsEditing(false)
+      const res = await updateCurrentUser(data);
+      setProfileData(res.data);
+      reset(res.data);
+      setIsEditing(false);
+      alert('Perfil actualizado exitosamente.');
     } catch (err) {
-      setError('Error al guardar el perfil.')
-      console.error(err)
+      setError('Error al guardar el perfil.');
+      console.error(err);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setFormData({ ...profileData })
-    setIsEditing(false)
-  }
+    reset(profileData); // Reset form to original data
+    setIsEditing(false);
+  };
+
+  const handleNumericInput = (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+  };
 
   if (loading) {
-    return <Layout><div className="text-center p-8">Cargando perfil...</div></Layout>
+    return <Layout><div className="text-center p-8">Cargando perfil...</div></Layout>;
   }
 
   if (error) {
-    return <Layout><div className="text-center p-8 text-red-600">{error}</div></Layout>
+    return <Layout><div className="text-center p-8 text-red-600">{error}</div></Layout>;
   }
 
   return (
@@ -82,10 +92,8 @@ const ClientProfile = () => {
                     <User className="h-16 w-16 text-white" />
                   </div>
                 </div>
-                
                 <h2 className="text-xl font-bold text-gray-900 mb-1">{profileData?.fullname}</h2>
                 <p className="text-gray-600 mb-4">{profileData?.email}</p>
-                
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Miembro desde:</span>
@@ -97,73 +105,74 @@ const ClientProfile = () => {
           </div>
 
           <div className="lg:col-span-2">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Información Personal</CardTitle>
-                {!isEditing ? (
-                  <Button variant="outline" onClick={() => setIsEditing(true)}>
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Editar
-                  </Button>
-                ) : (
-                  <div className="space-x-2">
-                    <Button variant="ghost" onClick={handleCancel}>Cancelar</Button>
-                    <Button onClick={handleSave}><Save className="h-4 w-4 mr-2" />Guardar</Button>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Input
-                    label="Nombre Completo"
-                    name="fullname"
-                    value={formData?.fullname || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    icon={User}
-                  />
-                  <Input
-                    label="Email"
-                    name="email"
-                    type="email"
-                    value={formData?.email || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    icon={Mail}
-                  />
-                  <Input
-                    label="Teléfono"
-                    name="phone"
-                    value={formData?.phone || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    icon={Phone}
-                  />
-                  <Input
-                    label="Cédula"
-                    name="cedula"
-                    value={formData?.cedula || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                  <div className="md:col-span-2">
+            <form onSubmit={handleSubmit(onSave)}>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Información Personal</CardTitle>
+                  {!isEditing ? (
+                    <Button type="button" variant="outline" onClick={() => setIsEditing(true)}>
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                  ) : (
+                    <div className="space-x-2">
+                      <Button type="button" variant="ghost" onClick={handleCancel}>Cancelar</Button>
+                      <Button type="submit"><Save className="h-4 w-4 mr-2" />Guardar</Button>
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Input
-                      label="Dirección"
-                      name="address"
-                      value={formData?.address || ''}
-                      onChange={handleInputChange}
+                      label="Nombre Completo"
+                      {...register("fullname")}
                       disabled={!isEditing}
-                      icon={MapPin}
+                      icon={User}
+                      error={errors.fullname?.message}
                     />
+                    <Input
+                      label="Email"
+                      type="email"
+                      {...register("email")}
+                      disabled={!isEditing}
+                      icon={Mail}
+                      error={errors.email?.message}
+                    />
+                    <Input
+                      label="Teléfono"
+                      {...register("phone")}
+                      onInput={handleNumericInput}
+                      maxLength={11}
+                      disabled={!isEditing}
+                      icon={Phone}
+                      error={errors.phone?.message}
+                    />
+                    <Input
+                      label="Cédula"
+                      {...register("cedula")}
+                      onInput={handleNumericInput}
+                      maxLength={8}
+                      disabled={!isEditing}
+                      error={errors.cedula?.message}
+                    />
+                    <div className="md:col-span-2">
+                      <Input
+                        label="Dirección"
+                        {...register("address")}
+                        disabled={!isEditing}
+                        icon={MapPin}
+                        error={errors.address?.message}
+                      />
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </form>
           </div>
         </div>
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default ClientProfile
+export default ClientProfile;

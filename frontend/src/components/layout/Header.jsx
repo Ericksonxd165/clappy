@@ -14,7 +14,8 @@ const Header = ({ onMenuToggle, isAdmin = false }) => {
     const fetchNotifications = async () => {
       try {
         const res = await getNotifications()
-        setNotifications(res.data)
+        const sortedNotifications = res.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setNotifications(sortedNotifications)
       } catch (error) {
         console.error("Failed to fetch notifications:", error)
       }
@@ -114,12 +115,14 @@ const Header = ({ onMenuToggle, isAdmin = false }) => {
 
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                <a
-                  href="/profile"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Mi Perfil
-                </a>
+                {!isAdmin && (
+                  <a
+                    href="/profile"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Mi Perfil
+                  </a>
+                )}
                 <button
                   onClick={logout}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
