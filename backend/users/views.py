@@ -7,7 +7,7 @@ from .serializer import UserSerializer, RegisterSerializer
 from .models import UsersCustom
 
 
-class CurrentUserView(generics.RetrieveAPIView):
+class CurrentUserView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
