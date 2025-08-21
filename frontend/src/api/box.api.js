@@ -49,4 +49,6 @@ export const clearSeasonData = (data) => api.post('/cajas/clear_season_data/', d
 export const getSupportConfig = () => api.get('/support-config/');
 export const updateSupportConfig = (id, data) => api.put(`/support-config/${id}/`, data);
 
+export const adminCreateCajaPersona = (data) => api.post('/cajaspersona/admin_create_payment/', data);
+
 export default api

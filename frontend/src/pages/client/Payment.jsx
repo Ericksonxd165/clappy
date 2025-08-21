@@ -24,30 +24,30 @@ const paymentSchema = z.object({
       .regex(phoneRegex, 'El formato del teléfono no es válido (04XX-XXXXXXX)')
       .optional(),
     receipt: z.any().optional()
-  }).superRefine((data, ctx) => {
+  }).refine(data => {
     if (data.paymentMethod === 'mobile') {
-      if (!data.reference || data.reference.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El número de referencia es requerido para Pago Móvil',
-          path: ['reference'],
-        });
-      }
-      if (!data.bank_name || data.bank_name.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El banco emisor es requerido para Pago Móvil',
-          path: ['bank_name'],
-        });
-      }
-      if (!data.sender_phone || data.sender_phone.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El número de teléfono del emisor es requerido para Pago Móvil',
-          path: ['sender_phone'],
-        });
-      }
+      return !!data.reference && data.reference.length > 0;
     }
+    return true;
+  }, {
+    message: 'El número de referencia es requerido para Pago Móvil',
+    path: ['reference'],
+  }).refine(data => {
+    if (data.paymentMethod === 'mobile') {
+      return !!data.bank_name && data.bank_name.length > 0;
+    }
+    return true;
+  }, {
+    message: 'El banco emisor es requerido para Pago Móvil',
+    path: ['bank_name'],
+  }).refine(data => {
+    if (data.paymentMethod === 'mobile') {
+      return !!data.sender_phone && data.sender_phone.length > 0;
+    }
+    return true;
+  }, {
+    message: 'El número de teléfono del emisor es requerido para Pago Móvil',
+    path: ['sender_phone'],
   });
 
 
@@ -61,7 +61,7 @@ const ClientPayment = () => {
   const navigate = useNavigate();
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
-    resolver: zodResolver(paymentSchema),
+    // resolver: zodResolver(paymentSchema),
     defaultValues: { paymentMethod: 'mobile' }
   });
 
@@ -181,7 +181,7 @@ const ClientPayment = () => {
                         </div>
                       </button>
                       <button
-                        type="submit"
+                        type="button"
                         onClick={() => setValue('paymentMethod', 'cash')}
                         className={`p-4 border-2 rounded-lg flex items-center space-x-3 transition-colors ${paymentMethod === 'cash' ? 'border-red-600 bg-red-50' : 'border-gray-300 hover:border-gray-400'}`}
                       >
@@ -256,11 +256,9 @@ const ClientPayment = () => {
                     </div>
                   )}
 
-                  {paymentMethod !== 'cash' && (
-                    <Button type="submit" className="w-full" disabled={loading || !caja || paymentsDisabled}>
-                      {loading ? 'Enviando...' : `Confirmar Pago de $${caja?.price || '...'}`}
-                    </Button>
-                  )}
+                  <Button type="submit" className="w-full" disabled={loading || !caja || paymentsDisabled}> {/* Added paymentsDisabled */}
+                    {loading ? 'Enviando...' : `Confirmar Pago de $${caja?.price || '...'}`}
+                  </Button>
                 </form>
               </CardContent>
             </Card>
