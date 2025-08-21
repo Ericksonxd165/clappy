@@ -58,7 +58,7 @@ const Header = ({ onMenuToggle, isAdmin = false }) => {
               <span className="text-white font-bold text-sm">CL</span>
             </div>
             <h1 className="text-xl font-bold text-gray-900">
-              Clappy {isAdmin && <span className="text-red-600">Admin</span>}
+              Clappy {isAdmin ? <span className="text-red-600">Admin</span> : <span className="text-green-600">Usuario</span>}
             </h1>
           </div>
         </div>

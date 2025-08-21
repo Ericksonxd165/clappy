@@ -381,7 +381,7 @@ const AdminPaymentsList = () => {
                                 onClick={() => handleStatusChange(payment.id, 'deliver')}
                                 className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-600 rounded"
                               >
-                                Entregar
+                                Entregado
                               </button>
                             )}
                           </div>

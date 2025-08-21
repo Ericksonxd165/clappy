@@ -234,7 +234,7 @@ const AdminStock = () => {
           </div>
           <Button
             onClick={() => setIsSeasonModalOpen(true)}
-            className="mt-4 sm:mt-0 bg-white text-red-600 hover:bg-red-50"
+            className="mt-4 sm:mt-0 bg-black text-red-600 hover:bg-red-50"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Iniciar Nueva Temporada

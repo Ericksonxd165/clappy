@@ -41,7 +41,7 @@ const ClientRegister = () => {
     setServerError('');
     const submissionData = {
       ...data,
-      address: `urb ciudad varyna, ${data.address}`,
+      address: `Urb Ciudad varyna sector I Araguaney, ${data.address}`,
     };
 
     try {

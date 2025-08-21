@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { useNavigate, Navigate, Link } from 'react-router-dom'
 import Button from '../../components/UI/Button'
 import { Package, DollarSign, CheckCircle, Clock, CreditCard, User, Bell } from 'lucide-react'
 import { getCaja, getCajaPersonas, getNotifications } from '../../api/box.api'
@@ -142,18 +142,25 @@ const ClientDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="w-full">
+            
+            <Link to="/payment">
+             <Button className="w-full">
               <CreditCard className="h-4 w-4 mr-2" />
               Realizar Pago
-            </Button>
+            </Button></Link>
+           
+            <Link to="/profile">
             <Button variant="outline" className="w-full">
               <User className="h-4 w-4 mr-2" />
               Ver Perfil
             </Button>
+            </Link>
+            <Link to="/payment-history">
             <Button variant="ghost" className="w-full">
               <Package className="h-4 w-4 mr-2" />
               Historial
             </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -171,7 +178,7 @@ const PaymentStatus = ({ payments }) => {
         <h3 className="text-lg font-semibold text-gray-600 mb-2">Sin Pagos Realizados</h3>
         <p className="text-gray-600 mb-4">Aún no has realizado ningún pago</p>
         <Button className="w-full" onClick={() => navigate('/payment')}>
-          Realizar Primer Pago
+          Realizar Pago
         </Button>
       </div>
     );

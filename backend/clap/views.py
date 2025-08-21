@@ -190,7 +190,7 @@ class CajaPersonaViewSet(viewsets.ModelViewSet):
         caja_persona = self.get_object()
         caja_persona.status = 'APPROVED'
         caja_persona.save()
-        Notification.objects.create(user=caja_persona.user, message="Tu pago ha sido aprobado.")
+        Notification.objects.create(user=caja_persona.user, message="Tu pago ha sido aprobado, Retira tu caja")
         return Response({'status': 'Payment approved'})
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
