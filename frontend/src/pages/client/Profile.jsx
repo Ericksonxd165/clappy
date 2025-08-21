@@ -76,7 +76,7 @@ const ClientProfile = () => {
   }
 
   return (
-    <Layout>
+
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">Mi Perfil</h1>
@@ -171,7 +171,7 @@ const ClientProfile = () => {
           </div>
         </div>
       </div>
-    </Layout>
+
   );
 };
 
