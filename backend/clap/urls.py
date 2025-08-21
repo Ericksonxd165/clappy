@@ -9,5 +9,6 @@ router.register(r'notifications', views.NotificationViewSet, basename='notificat
 router.register(r'pago-movil-config', views.PagoMovilConfigViewSet, basename='pagomovilconfig')
 
 urlpatterns = [
+    path('cajas/payment-details/', views.CajaViewSet.as_view({'get': 'payment_details'}), name='caja-payment-details'),
     path('', include(router.urls)),
 ]

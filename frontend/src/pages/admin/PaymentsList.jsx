@@ -3,7 +3,7 @@ import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import { Search, CheckCircle, X, Eye, ChevronLeft, ChevronRight, Download, CreditCard } from 'lucide-react'
-import { getCajasPersona, approvePayment, rejectPayment, confirmDelivery } from '../../api/box.api'
+import { getCajaPersonas, approvePayment, rejectPayment, confirmDelivery } from '../../api/box.api'
 
 const AdminPaymentsList = () => {
   const [payments, setPayments] = useState([])
@@ -20,7 +20,7 @@ const AdminPaymentsList = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true)
-      const res = await getCajasPersona()
+      const res = await getCajaPersonas()
       setPayments(res.data)
     } catch (err) {
       setError('Error al cargar los pagos.')

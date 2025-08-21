@@ -6,15 +6,20 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import caja, cajaPersona, Notification, PagoMovilConfig
 from .serializers import CajaSerializer, CajaPersonaSerializer, NotificationSerializer, PagoMovilConfigSerializer
 from users.models import UsersCustom
+from rest_framework import serializers
 
 # Create your views here.
+
+class PaymentDetailsSerializer(serializers.Serializer):
+    caja = CajaSerializer()
+    pago_movil_config = PagoMovilConfigSerializer()
 
 class CajaViewSet(viewsets.ModelViewSet):
     queryset = caja.objects.all()
     serializer_class = CajaSerializer
 
     def get_permissions(self):
-        if self.action == 'list' or self.action == 'retrieve':
+        if self.action == 'list' or self.action == 'retrieve' or self.action == 'payment_details':
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsAdminUser]
@@ -35,6 +40,29 @@ class CajaViewSet(viewsets.ModelViewSet):
                     message=f"El precio de la caja ha sido actualizado a ${new_price}."
                 )
         return response
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def payment_details(self, request):
+        main_caja = caja.objects.order_by('-date').first()
+        pago_movil_config, created = PagoMovilConfig.objects.get_or_create(
+            id=1,
+            defaults={'cedula': '', 'telefono': '', 'banco': ''}
+        )
+
+        if not main_caja:
+            return Response(
+                {"error": "No hay una caja principal disponible."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        caja_serializer = CajaSerializer(main_caja)
+        pago_movil_serializer = PagoMovilConfigSerializer(pago_movil_config)
+
+        response_data = {
+            'caja': caja_serializer.data,
+            'pago_movil_config': pago_movil_serializer.data
+        }
+        return Response(response_data)
 
 class CajaPersonaViewSet(viewsets.ModelViewSet):
     serializer_class = CajaPersonaSerializer

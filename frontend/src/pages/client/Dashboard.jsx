@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
+import { useNavigate, Navigate } from 'react-router-dom'
 import Button from '../../components/UI/Button'
 import { Package, DollarSign, CheckCircle, Clock, CreditCard, User, Bell } from 'lucide-react'
-import { getCaja, getCajasPersona, getNotifications } from '../../api/box.api'
+import { getCaja, getCajaPersonas, getNotifications } from '../../api/box.api'
+
 
 const ClientDashboard = () => {
+  
+  const navigate = useNavigate()
+  
+  
   const [dashboardData, setDashboardData] = useState({
     availableBoxes: "--",
     boxPrice: "--",
@@ -33,7 +39,7 @@ const ClientDashboard = () => {
           })
         }
 
-        const paymentsRes = await getCajasPersona()
+        const paymentsRes = await getCajaPersonas()
         setUserPayments(paymentsRes.data)
 
         const notificationsRes = await getNotifications()
@@ -155,6 +161,7 @@ const ClientDashboard = () => {
 ) }
 
 const PaymentStatus = ({ payments }) => {
+  const navigate = useNavigate(); // <--- Agrega esto aquí
   const lastPayment = payments.length > 0 ? payments[payments.length - 1] : null;
 
   if (!lastPayment) {
@@ -163,7 +170,7 @@ const PaymentStatus = ({ payments }) => {
         <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-600 mb-2">Sin Pagos Realizados</h3>
         <p className="text-gray-600 mb-4">Aún no has realizado ningún pago</p>
-        <Button className="w-full" onClick={() => window.location.href = '/client/payment'}>
+        <Button className="w-full" onClick={() => navigate('/payment')}>
           Realizar Primer Pago
         </Button>
       </div>

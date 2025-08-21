@@ -32,6 +32,8 @@ class cajaPersona(models.Model):
         payment_method = models.CharField(max_length=50, blank=True, null=True)
         amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
         reference = models.CharField(max_length=100, blank=True, null=True)
+        bank_name = models.CharField(max_length=100, blank=True, null=True)
+        sender_phone = models.CharField(max_length=20, blank=True, null=True)
         img = models.ImageField(upload_to='caja_images/', blank=True, null=True)
         moneda = models.CharField(max_length=10, default='Bs')
         PAYMENT_STATUS_CHOICES = [

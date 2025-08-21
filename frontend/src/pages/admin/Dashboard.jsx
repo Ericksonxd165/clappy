@@ -4,7 +4,7 @@ import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import { Package, DollarSign, CheckCircle, Clock ,CreditCard, User, TrendingUp, Users } from 'lucide-react'
-import { getCaja, getCajasPersona } from '../../api/box.api'
+import { getCaja, getCajaPersonas } from '../../api/box.api'
 
 const AdminDashboard = () => {
   const [caja, setCaja] = useState(null)
@@ -20,7 +20,7 @@ const AdminDashboard = () => {
         setLoading(true)
         const [cajaRes, paymentsRes] = await Promise.all([
           getCaja(),
-          getCajasPersona()
+          getCajaPersonas()
         ])
 
         if (cajaRes.data.length > 0) {

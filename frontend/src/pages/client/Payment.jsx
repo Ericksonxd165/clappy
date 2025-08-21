@@ -7,14 +7,21 @@ import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Ca
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { Smartphone, DollarSign, Upload } from 'lucide-react';
-import { createCajaPersona, getCaja, getPagoMovilConfig } from '../../api/box.api';
+import { createCajaPersona, getPaymentDetails } from '../../api/box.api'; // Using combined API call
 import { useNavigate } from 'react-router-dom';
 import Modal from '../../components/UI/Modal';
+import { toast } from 'react-hot-toast';
+import { venezuelanBanks, handleNumericInput, phoneRegex } from '../../utils/validations'; // Import venezuelanBanks and phoneRegex
 
 const paymentSchema = z.object({
     paymentMethod: z.enum(['mobile', 'cash']),
     reference: z.string()
       .max(30, { message: 'La referencia no puede tener más de 30 caracteres' })
+      .regex(/^\d+$/, 'El número de referencia debe contener solo dígitos.')
+      .optional(),
+    bank_name: z.string().optional(),
+    sender_phone: z.string()
+      .regex(phoneRegex, 'El formato del teléfono no es válido (04XX-XXXXXXX)')
       .optional(),
     receipt: z.any().optional()
   }).refine(data => {
@@ -25,6 +32,22 @@ const paymentSchema = z.object({
   }, {
     message: 'El número de referencia es requerido para Pago Móvil',
     path: ['reference'],
+  }).refine(data => {
+    if (data.paymentMethod === 'mobile') {
+      return !!data.bank_name && data.bank_name.length > 0;
+    }
+    return true;
+  }, {
+    message: 'El banco emisor es requerido para Pago Móvil',
+    path: ['bank_name'],
+  }).refine(data => {
+    if (data.paymentMethod === 'mobile') {
+      return !!data.sender_phone && data.sender_phone.length > 0;
+    }
+    return true;
+  }, {
+    message: 'El número de teléfono del emisor es requerido para Pago Móvil',
+    path: ['sender_phone'],
   }).refine(data => {
     if (data.paymentMethod === 'mobile') {
       return !!data.receipt && data.receipt.length > 0;
@@ -39,8 +62,8 @@ const paymentSchema = z.object({
 const ClientPayment = () => {
   const [caja, setCaja] = useState(null);
   const [pagoMovilConfig, setPagoMovilConfig] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Kept for potential future use
+  const [loading, setLoading] = useState(true); // Changed to true initially
   const [serverError, setServerError] = useState(null);
   const navigate = useNavigate();
 
@@ -54,14 +77,14 @@ const ClientPayment = () => {
   useEffect(() => {
     const fetchPageData = async () => {
       try {
-        const cajaRes = await getCaja();
-        if (cajaRes.data.length > 0) {
-          setCaja(cajaRes.data[0]);
-        }
-        const configRes = await getPagoMovilConfig();
-        setPagoMovilConfig(configRes.data);
+        const res = await getPaymentDetails(); // Using combined API call
+        setCaja(res.data.caja);
+        setPagoMovilConfig(res.data.pago_movil_config);
       } catch (err) {
+        console.error("Error loading payment details:", err);
         setServerError("No se pudieron cargar los detalles de la página de pago.");
+      } finally {
+        setLoading(false);
       }
     };
     fetchPageData();
@@ -82,24 +105,45 @@ const ClientPayment = () => {
 
     const formData = new FormData();
     formData.append('cajaid', caja.id);
-    formData.append('payment_method', data.paymentMethod === 'mobile' ? 'Pago Movil' : 'Efectivo');
+    formData.append('payment_method', data.paymentMethod === 'mobile' ? 'Pago Movil' : 'Efectivo'); // Changed to match backend serializer choices
     formData.append('amount', caja.price);
-    formData.append('moneda', 'USD');
+    formData.append('moneda', caja.moneda || 'Bs'); // Use caja.moneda or default to Bs
 
     if (data.paymentMethod === 'mobile') {
       formData.append('reference', data.reference);
-      formData.append('img', data.receipt[0]);
+      formData.append('bank_name', data.bank_name); // New field
+      formData.append('sender_phone', data.sender_phone); // New field
+      if (data.receipt && data.receipt[0]) {
+        formData.append('img', data.receipt[0]);
+      }
     }
 
     try {
       await createCajaPersona(formData);
-      navigate('/dashboard');
+      toast.success('Pago reportado exitosamente!');
+      navigate('/payment-history'); // Changed to payment-history
     } catch (err) {
+      console.error("Error reporting payment:", err);
       setServerError(err.response?.data?.error || "Error al procesar el pago. Intente de nuevo.");
+      toast.error('Error al reportar el pago.');
     } finally {
       setLoading(false);
     }
   };
+
+  const paymentsDisabled = caja && !caja.payments_enabled; // Check if caja is loaded before accessing payments_enabled
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Cargando...</div>;
+  }
+
+  if (serverError) {
+    return <div className="flex justify-center items-center h-screen text-red-500">{serverError}</div>;
+  }
+
+  if (!caja) {
+    return <div className="flex justify-center items-center h-screen text-red-500">No hay detalles de caja disponibles.</div>;
+  }
 
   return (
 
@@ -108,6 +152,13 @@ const ClientPayment = () => {
           <h1 className="text-2xl font-bold mb-2">Realizar Pago</h1>
           <p className="text-red-100">Completa tu pago de manera segura</p>
         </div>
+
+        {paymentsDisabled && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong className="font-bold">Pagos Deshabilitados:</strong>
+            <span className="block sm:inline"> En este momento, los pagos están deshabilitados por el administrador.</span>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
@@ -149,6 +200,37 @@ const ClientPayment = () => {
                   {paymentMethod === 'mobile' && (
                     <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                       <h3 className="font-medium text-gray-900">Datos del Pago Móvil</h3>
+                      {pagoMovilConfig && (
+                        <div className="mb-4 p-4 border rounded-md bg-gray-100">
+                            <h4 className="text-md font-bold mb-2">Datos para Transferencia:</h4>
+                            <p><strong>Cédula/RIF:</strong> {pagoMovilConfig.cedula}</p>
+                            <p><strong>Teléfono:</strong> {pagoMovilConfig.telefono}</p>
+                            <p><strong>Banco:</strong> {pagoMovilConfig.banco}</p>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <label htmlFor="bank_name" className="block text-sm font-medium text-gray-700">Banco Emisor</label>
+                        <select
+                          id="bank_name"
+                          {...register("bank_name")}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                        >
+                          <option value="">Seleccione un banco</option>
+                          {Object.keys(venezuelanBanks).map((bankName) => (
+                            <option key={bankName} value={bankName}>
+                              {bankName}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.bank_name && <p className="mt-2 text-sm text-red-600">{errors.bank_name.message}</p>}
+                      </div>
+                      <Input
+                        label="Número de Teléfono del Emisor"
+                        {...register("sender_phone")}
+                        onInput={handleNumericInput}
+                        placeholder="0412XXXXXXX"
+                        error={errors.sender_phone?.message}
+                      />
                       <Input
                         label="Número de Referencia"
                         {...register("reference")}
@@ -177,7 +259,7 @@ const ClientPayment = () => {
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full" disabled={loading || !caja}>
+                  <Button type="submit" className="w-full" disabled={loading || !caja || paymentsDisabled}> {/* Added paymentsDisabled */}
                     {loading ? 'Enviando...' : `Confirmar Pago de $${caja?.price || '...'}`}
                   </Button>
                 </form>
@@ -209,7 +291,8 @@ const ClientPayment = () => {
           </div>
         </div>
       </div>
-    
+     
+
   );
 };
 

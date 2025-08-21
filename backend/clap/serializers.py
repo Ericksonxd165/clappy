@@ -27,7 +27,7 @@ class CajaPersonaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = cajaPersona
-        fields = '__all__'
+        fields = ['id', 'cajaid', 'user', 'date', 'delivered', 'payment_method', 'amount', 'reference', 'bank_name', 'sender_phone', 'img', 'moneda', 'status']
         read_only_fields = ('status', 'user',)
 
     def create(self, validated_data):
