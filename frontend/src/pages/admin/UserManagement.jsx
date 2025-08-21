@@ -5,7 +5,7 @@ import Button from '../../components/UI/Button';
 import { Edit, Trash, Plus, Download } from 'lucide-react';
 import UserEditModal from '../../components/admin/UserEditModal';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -100,7 +100,7 @@ const UserManagement = () => {
     doc.text("Mi Aplicación de Cajas", 150, 22);
 
     // Add table
-    doc.autoTable({
+    autoTable(doc, {
       startY: 40,
       head: [['ID', 'Nombre Completo', 'Email', 'Cédula', 'Teléfono', 'Dirección']],
       body: users.map(user => [
@@ -137,8 +137,9 @@ const UserManagement = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre de Usuario</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo Electrónico</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cédula</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
@@ -146,8 +147,15 @@ const UserManagement = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
               <tr key={user.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{user.username}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="font-medium text-gray-900">{user.fullname || user.username}</div>
+                  <div className="text-sm text-gray-500">{user.username}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{user.email}</div>
+                  <div className="text-sm text-gray-500">{user.phone}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.cedula}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_staff ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
                     {user.is_staff ? 'Admin' : 'Cliente'}
