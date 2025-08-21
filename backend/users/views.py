@@ -83,6 +83,7 @@ El equipo de la aplicación
             )
             return Response({'success': 'Se ha enviado un correo de recuperación.'}, status=status.HTTP_200_OK)
         except Exception as e:
+            print(f"Error sending email: {e}")
             return Response({'error': f'Hubo un problema al enviar el correo: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

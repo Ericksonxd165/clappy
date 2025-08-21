@@ -29,7 +29,7 @@ const ClientForgotPassword = () => {
 
     try {
       await requestPasswordReset({ email });
-      setMessage('Si una cuenta con ese email existe, se ha enviado un correo de recuperación.');
+      setMessage('se ha enviado un correo de recuperación.');
       setEmail('');
     } catch (err) {
       setError('Ocurrió un error al intentar enviar el correo. Por favor, inténtalo de nuevo.');
