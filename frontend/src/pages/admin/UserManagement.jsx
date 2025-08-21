@@ -4,6 +4,8 @@ import { listUsers, deleteUser, createUser, updateUser } from '../../api/users.a
 import Button from '../../components/UI/Button';
 import { Edit, Trash, Plus, Download } from 'lucide-react';
 import UserEditModal from '../../components/admin/UserEditModal';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -83,6 +85,37 @@ const UserManagement = () => {
     document.body.removeChild(link);
   };
 
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+
+    // Add header
+    doc.setFontSize(20);
+    doc.text("Reporte de Usuarios", 14, 22);
+    doc.setFontSize(12);
+    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
+
+    // Add branding
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text("Mi Aplicación de Cajas", 150, 22);
+
+    // Add table
+    doc.autoTable({
+      startY: 40,
+      head: [['ID', 'Nombre Completo', 'Email', 'Cédula', 'Teléfono', 'Dirección']],
+      body: users.map(user => [
+        user.id,
+        user.fullname || user.username,
+        user.email,
+        user.cedula,
+        user.phone,
+        user.address || 'N/A'
+      ]),
+    });
+
+    doc.save('reporte_usuarios.pdf');
+  };
+
   if (loading) return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Layout>;
   if (error) return <Layout isAdmin={true}><div className="text-center p-8 text-red-600">{error}</div></Layout>;
 
@@ -92,6 +125,7 @@ const UserManagement = () => {
         <h1 className="text-2xl font-bold">Gestión de Usuarios</h1>
         <div className="flex space-x-2">
           <Button onClick={exportToCSV}><Download className="h-4 w-4 mr-2"/>Exportar a CSV</Button>
+          <Button onClick={exportToPDF}><Download className="h-4 w-4 mr-2"/>Exportar a PDF</Button>
           <Button onClick={() => handleOpenModal()}>
             <Plus className="h-4 w-4 mr-2" />
             Agregar Usuario

@@ -42,4 +42,8 @@ export const markNotificationAsRead = (id)=> { return api.post(`/notifications/$
 export const getPagoMovilConfig = ()=> { return api.get('/pago-movil-config/') }
 export const updatePagoMovilConfig = (id, data)=> { return api.put(`/pago-movil-config/${id}/`, data) }
 
+export const getDollarRate = () => api.get('/dollar-rate/');
+
+export const clearSeasonData = (data) => api.post('/cajas/clear_season_data/', data);
+
 export default api

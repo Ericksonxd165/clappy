@@ -1,3 +1,7 @@
+import os
+import requests
+from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -63,6 +67,62 @@ class CajaViewSet(viewsets.ModelViewSet):
             'pago_movil_config': pago_movil_serializer.data
         }
         return Response(response_data)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def clear_season_data(self, request):
+        """
+        Deletes all payments, associated images, and boxes to start a new season.
+        Creates a new box with a specified price and stock.
+        """
+        try:
+            # Data from request
+            new_price = request.data.get('price')
+            new_stock = request.data.get('stock')
+
+            if new_price is None or new_stock is None:
+                return Response(
+                    {"error": "Price and stock for the new season are required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Delete payment images
+            payments = cajaPersona.objects.all()
+            for payment in payments:
+                if payment.img:
+                    image_path = os.path.join(settings.MEDIA_ROOT, str(payment.img))
+                    if os.path.exists(image_path):
+                        os.remove(image_path)
+
+            # Delete all payments
+            payments.delete()
+
+            # Delete all existing boxes
+            caja.objects.all().delete()
+
+            # Create a new box for the new season
+            new_caja = caja.objects.create(
+                price=new_price,
+                stock=new_stock,
+                payments_enabled=True
+            )
+
+            # Notify all non-admin users
+            users = UsersCustom.objects.filter(is_staff=False)
+            for user in users:
+                Notification.objects.create(
+                    user=user,
+                    message="¡Nueva temporada de cajas disponible! Ya puedes realizar tu pago."
+                )
+
+            return Response(
+                {"status": "Season data cleared and new season started.", "new_box_id": new_caja.id},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class CajaPersonaViewSet(viewsets.ModelViewSet):
     serializer_class = CajaPersonaSerializer
@@ -196,3 +256,13 @@ class PagoMovilConfigViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+
+def get_dollar_rate(request):
+    try:
+        response = requests.get('https://ve.dolarapi.com/v1/dolares/oficial')
+        response.raise_for_status()  # Raise an exception for bad status codes
+        data = response.json()
+        return JsonResponse({'rate': data.get('promedio')})
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=500)

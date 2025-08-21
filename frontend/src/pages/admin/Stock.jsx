@@ -6,8 +6,8 @@ import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
-import { Package, DollarSign, Plus, Minus, Save, History, TrendingUp, AlertTriangle } from 'lucide-react'
-import { getCaja, updateCaja, createCaja, getPagoMovilConfig, updatePagoMovilConfig } from '../../api/box.api'
+import { Package, DollarSign, Plus, Minus, Save, History, TrendingUp, AlertTriangle, RefreshCw } from 'lucide-react'
+import { getCaja, updateCaja, createCaja, getPagoMovilConfig, updatePagoMovilConfig, clearSeasonData, getDollarRate } from '../../api/box.api'
 import { venezuelanBanks, handleNumericInput, phoneRegex, cedulaRegex } from '../../utils/validations'
 
 const pagoMovilSchema = z.object({
@@ -26,6 +26,11 @@ const AdminStock = () => {
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [isUpdatingStock, setIsUpdatingStock] = useState(false)
   const [isUpdatingPagoMovil, setIsUpdatingPagoMovil] = useState(false)
+  const [isSeasonModalOpen, setIsSeasonModalOpen] = useState(false)
+  const [newSeasonPrice, setNewSeasonPrice] = useState('')
+  const [newSeasonStock, setNewSeasonStock] = useState('')
+  const [isClearingSeason, setIsClearingSeason] = useState(false)
+  const [dollarRate, setDollarRate] = useState(null)
 
   const {
     register,
@@ -41,32 +46,45 @@ const AdminStock = () => {
     }
   });
 
-  const fetchCaja = async () => {
+  const fetchPageData = async () => {
     try {
-      setLoading(true)
-      const res = await getCaja()
-      if (res.data.length > 0) {
-        const cajaData = res.data[0]
-        setCaja(cajaData)
-        setNewPrice(cajaData.price)
-        setError(null)
+      setLoading(true);
+      const [cajaRes, rateRes, pagoMovilRes] = await Promise.all([
+        getCaja(),
+        getDollarRate(),
+        getPagoMovilConfig(),
+      ]);
+
+      if (cajaRes.data.length > 0) {
+        const cajaData = cajaRes.data[0];
+        setCaja(cajaData);
+        setNewPrice(cajaData.price);
       } else {
-        setCaja(null)
+        setCaja(null);
       }
+
+      setDollarRate(rateRes.data.rate);
+
+      if (pagoMovilRes.data) {
+        setValue('cedula', pagoMovilRes.data.cedula, { shouldValidate: true });
+        setValue('telefono', pagoMovilRes.data.telefono, { shouldValidate: true });
+        setValue('banco', pagoMovilRes.data.banco, { shouldValidate: true });
+      }
+      setError(null);
     } catch (err) {
-      setError('Error al cargar los datos de la caja.')
-      console.error(err)
+      setError('Error al cargar los datos de la página.');
+      console.error(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreateCaja = async () => {
     try {
       setLoading(true);
       await createCaja({ price: 0, stock: 0 }); // Create with default values
       alert('Caja creada exitosamente. Ahora puedes actualizar su precio y stock.');
-      await fetchCaja(); // Fetch the newly created caja
+      await fetchPageData(); // Fetch the newly created caja
     } catch (error) {
       alert('Error al crear la caja.');
       console.error(error);
@@ -76,22 +94,8 @@ const AdminStock = () => {
   };
 
   useEffect(() => {
-    fetchCaja()
-    fetchPagoMovilConfig()
+    fetchPageData()
   }, [])
-
-  const fetchPagoMovilConfig = async () => {
-    try {
-      const res = await getPagoMovilConfig()
-      if (res.data) {
-        setValue('cedula', res.data.cedula, { shouldValidate: true })
-        setValue('telefono', res.data.telefono, { shouldValidate: true })
-        setValue('banco', res.data.banco, { shouldValidate: true })
-      }
-    } catch (error) {
-      console.error("Error al cargar la configuración de Pago Móvil", error)
-    }
-  }
 
   const handlePriceUpdate = async () => {
     if (newPrice <= 0) {
@@ -191,13 +195,50 @@ const AdminStock = () => {
     );
   }
 
+  const handleClearSeason = async () => {
+    if (!newSeasonPrice || !newSeasonStock || newSeasonPrice <= 0 || newSeasonStock < 0) {
+      alert("Por favor, introduce un precio y stock válidos para la nueva temporada.");
+      return;
+    }
+
+    const isConfirmed = window.confirm(
+      "¿Estás seguro de que deseas iniciar una nueva temporada? Esta acción es irreversible y eliminará todos los pagos y cajas actuales."
+    );
+
+    if (isConfirmed) {
+      setIsClearingSeason(true);
+      try {
+        await clearSeasonData({ price: newSeasonPrice, stock: newSeasonStock });
+        alert("¡Nueva temporada iniciada con éxito!");
+        setIsSeasonModalOpen(false);
+        setNewSeasonPrice('');
+        setNewSeasonStock('');
+        await fetchCaja(); // Refresh all data
+      } catch (error) {
+        alert("Error al iniciar la nueva temporada.");
+        console.error(error);
+      } finally {
+        setIsClearingSeason(false);
+      }
+    }
+  };
+
   return (
     <Layout isAdmin={true}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">Gestión de Cajas</h1>
-          <p className="text-red-100">Administra el inventario y precios de las cajas</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Gestión de Cajas</h1>
+            <p className="text-red-100">Administra el inventario y precios de las cajas</p>
+          </div>
+          <Button
+            onClick={() => setIsSeasonModalOpen(true)}
+            className="mt-4 sm:mt-0 bg-white text-red-600 hover:bg-red-50"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Iniciar Nueva Temporada
+          </Button>
         </div>
 
         {/* Stock Overview */}
@@ -226,7 +267,11 @@ const AdminStock = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Precio Actual</p>
                   <p className="text-2xl font-bold text-gray-900">${caja.price}</p>
-                  <p className="text-xs text-green-600">por caja</p>
+                  {dollarRate && (
+                    <p className="text-sm text-gray-500">
+                      Bs. {(caja.price * dollarRate).toFixed(2)}
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -275,36 +320,39 @@ const AdminStock = () => {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Precio por Caja ($)
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Precio en USD ($)
                   </label>
-                  <div className="flex space-x-2">
+                  <Input
+                    type="number"
+                    value={newPrice}
+                    onChange={(e) => setNewPrice(e.target.value)}
+                    placeholder="20"
+                    min="0.01"
+                    step="0.01"
+                  />
+                </div>
+                {dollarRate && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Precio en Bs
+                    </label>
                     <Input
                       type="number"
-                      value={newPrice}
-                      onChange={(e) => setNewPrice(e.target.value)}
-                      placeholder="150"
-                      min="1"
-                      step="0.01"
+                      value={(newPrice * dollarRate).toFixed(2)}
+                      onChange={(e) => setNewPrice(e.target.value / dollarRate)}
+                      placeholder="2800"
                     />
-                    <Button
-                      onClick={handlePriceUpdate}
-                      disabled={isUpdatingPrice || newPrice === caja.price}
-                    >
-                      {isUpdatingPrice ? (
-                        <div className="flex items-center">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Actualizando...
-                        </div>
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-2" />
-                          Actualizar
-                        </>
-                      )}
-                    </Button>
+                     <p className="text-xs text-gray-500 mt-1">Tasa: 1 USD = {dollarRate} Bs.</p>
                   </div>
-                </div>
+                )}
+                 <Button
+                  onClick={handlePriceUpdate}
+                  disabled={isUpdatingPrice || newPrice === caja.price}
+                  className="w-full"
+                >
+                  {isUpdatingPrice ? 'Actualizando...' : 'Actualizar Precio'}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -431,6 +479,45 @@ const AdminStock = () => {
             </form>
           </CardContent>
         </Card>
+
+        {/* New Season Modal */}
+        {isSeasonModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+              <h2 className="text-xl font-bold mb-4">Iniciar Nueva Temporada</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Esto eliminará todos los pagos y cajas actuales. Esta acción no se puede deshacer.
+              </p>
+              <div className="space-y-4">
+                <Input
+                  label="Nuevo Precio de la Caja ($)"
+                  type="number"
+                  value={newSeasonPrice}
+                  onChange={(e) => setNewSeasonPrice(e.target.value)}
+                  placeholder="Ej: 20"
+                  min="0.01"
+                  step="0.01"
+                />
+                <Input
+                  label="Stock Inicial de la Nueva Caja"
+                  type="number"
+                  value={newSeasonStock}
+                  onChange={(e) => setNewSeasonStock(e.target.value)}
+                  placeholder="Ej: 500"
+                  min="0"
+                />
+              </div>
+              <div className="mt-6 flex justify-end space-x-4">
+                <Button variant="outline" onClick={() => setIsSeasonModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleClearSeason} disabled={isClearingSeason}>
+                  {isClearingSeason ? 'Iniciando...' : 'Confirmar e Iniciar'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   )

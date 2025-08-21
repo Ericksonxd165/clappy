@@ -7,7 +7,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Ca
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { Smartphone, DollarSign, Upload } from 'lucide-react';
-import { createCajaPersona, getPaymentDetails } from '../../api/box.api'; // Using combined API call
+import { createCajaPersona, getPaymentDetails, getDollarRate } from '../../api/box.api'; // Using combined API call
 import { useNavigate } from 'react-router-dom';
 import Modal from '../../components/UI/Modal';
 import { toast } from 'react-hot-toast';
@@ -48,20 +48,13 @@ const paymentSchema = z.object({
   }, {
     message: 'El número de teléfono del emisor es requerido para Pago Móvil',
     path: ['sender_phone'],
-  }).refine(data => {
-    if (data.paymentMethod === 'mobile') {
-      return !!data.receipt && data.receipt.length > 0;
-    }
-    return true;
-  }, {
-    message: 'El comprobante es requerido para Pago Móvil',
-    path: ['receipt'],
   });
 
 
 const ClientPayment = () => {
   const [caja, setCaja] = useState(null);
   const [pagoMovilConfig, setPagoMovilConfig] = useState(null);
+  const [dollarRate, setDollarRate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // Kept for potential future use
   const [loading, setLoading] = useState(true); // Changed to true initially
   const [serverError, setServerError] = useState(null);
@@ -77,11 +70,15 @@ const ClientPayment = () => {
   useEffect(() => {
     const fetchPageData = async () => {
       try {
-        const res = await getPaymentDetails(); // Using combined API call
-        setCaja(res.data.caja);
-        setPagoMovilConfig(res.data.pago_movil_config);
+        const [detailsRes, rateRes] = await Promise.all([
+          getPaymentDetails(),
+          getDollarRate()
+        ]);
+        setCaja(detailsRes.data.caja);
+        setPagoMovilConfig(detailsRes.data.pago_movil_config);
+        setDollarRate(rateRes.data.rate);
       } catch (err) {
-        console.error("Error loading payment details:", err);
+        console.error("Error loading page data:", err);
         setServerError("No se pudieron cargar los detalles de la página de pago.");
       } finally {
         setLoading(false);
@@ -280,9 +277,16 @@ const ClientPayment = () => {
                     <span className="font-medium">${caja?.price || '0.00'}</span>
                   </div>
                   <div className="border-t pt-4">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold">Total:</span>
-                      <span className="text-lg font-bold text-red-600">${caja?.price || '0.00'}</span>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-red-600">${caja?.price || '0.00'}</p>
+                        {dollarRate && (
+                          <p className="text-sm text-gray-500">
+                            Bs. {(caja.price * dollarRate).toFixed(2)}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

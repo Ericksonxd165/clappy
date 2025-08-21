@@ -3,12 +3,15 @@ import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import { Search, CheckCircle, X, Eye, ChevronLeft, ChevronRight, Download, CreditCard } from 'lucide-react'
-import { getCajaPersonas, approvePayment, rejectPayment, confirmDelivery } from '../../api/box.api'
+import { getCajaPersonas, approvePayment, rejectPayment, confirmDelivery, getDollarRate } from '../../api/box.api'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 const AdminPaymentsList = () => {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [dollarRate, setDollarRate] = useState(null)
 
   const [selectedPayments, setSelectedPayments] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -20,10 +23,14 @@ const AdminPaymentsList = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true)
-      const res = await getCajaPersonas()
-      setPayments(res.data)
+      const [paymentsRes, rateRes] = await Promise.all([
+        getCajaPersonas(),
+        getDollarRate()
+      ]);
+      setPayments(paymentsRes.data)
+      setDollarRate(rateRes.data.rate)
     } catch (err) {
-      setError('Error al cargar los pagos.')
+      setError('Error al cargar los datos.')
       console.error(err)
     } finally {
       setLoading(false)
@@ -156,6 +163,24 @@ const AdminPaymentsList = () => {
     document.body.removeChild(link);
   }
 
+  const exportToPDF = () => {
+    const doc = new jsPDF()
+    doc.autoTable({
+      head: [['ID', 'Usuario', 'Email', 'Referencia', 'Monto (USD)', 'Monto (Bs)', 'Fecha', 'Estado']],
+      body: filteredPayments.map(p => [
+        p.id,
+        p.user?.fullname || p.user?.username,
+        p.user?.email,
+        p.reference,
+        `$${p.amount}`,
+        dollarRate ? `Bs. ${(p.amount * dollarRate).toFixed(2)}` : 'N/A',
+        new Date(p.date).toLocaleDateString(),
+        p.status,
+      ]),
+    })
+    doc.save('pagos.pdf')
+  }
+
   if (loading) {
     return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Layout>
   }
@@ -206,6 +231,10 @@ const AdminPaymentsList = () => {
                 <Button onClick={exportToCSV} variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
                   Exportar CSV
+                </Button>
+                <Button onClick={exportToPDF} variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar PDF
                 </Button>
 
                 {/* Bulk Actions */}
@@ -290,7 +319,7 @@ const AdminPaymentsList = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div>
-                            <div className="font-medium text-gray-900">{payment.user?.username}</div>
+                            <div className="font-medium text-gray-900">{payment.user?.fullname || payment.user?.username}</div>
                             <div className="text-gray-500">{payment.user?.email}</div>
                           </div>
                         </td>
@@ -303,7 +332,12 @@ const AdminPaymentsList = () => {
                           {payment.reference}
                         </td>
                         <td className="px-6 py-4 font-medium text-gray-900">
-                          ${payment.amount}
+                          <div>${payment.amount}</div>
+                          {dollarRate && (
+                            <div className="text-sm text-gray-500">
+                              Bs. {(payment.amount * dollarRate).toFixed(2)}
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-gray-900">
                           {new Date(payment.date).toLocaleDateString()}
@@ -410,12 +444,22 @@ const AdminPaymentsList = () => {
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
               <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Comprobante de Pago</h3>
-                <button
-                  onClick={() => setShowReceiptModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-6 w-6" />
-                </button>
+                <div className="flex items-center space-x-4">
+                  <a
+                    href={selectedReceipt}
+                    download="comprobante.jpg"
+                    className="text-blue-600 hover:text-blue-800"
+                    title="Descargar"
+                  >
+                    <Download className="h-6 w-6" />
+                  </a>
+                  <button
+                    onClick={() => setShowReceiptModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
               </div>
               <div className="p-4">
                 <img

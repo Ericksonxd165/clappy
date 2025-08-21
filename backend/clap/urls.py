@@ -10,5 +10,6 @@ router.register(r'pago-movil-config', views.PagoMovilConfigViewSet, basename='pa
 
 urlpatterns = [
     path('cajas/payment-details/', views.CajaViewSet.as_view({'get': 'payment_details'}), name='caja-payment-details'),
+    path('dollar-rate/', views.get_dollar_rate, name='dollar-rate'),
     path('', include(router.urls)),
 ]

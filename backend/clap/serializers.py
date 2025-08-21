@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import caja, cajaPersona, Notification, PagoMovilConfig
+from users.serializer import UserSerializer
 
 class CajaSerializer(serializers.ModelSerializer):
     sold = serializers.IntegerField(read_only=True)
@@ -24,11 +25,12 @@ class CajaPersonaSerializer(serializers.ModelSerializer):
     
     payment_method = serializers.ChoiceField(choices=PAYMENT_METHOD_CHOICES)
     moneda = serializers.ChoiceField(choices=MONEDA_CHOICES, default='Bs')
+    user = UserSerializer(read_only=True)
     
     class Meta:
         model = cajaPersona
         fields = ['id', 'cajaid', 'user', 'date', 'delivered', 'payment_method', 'amount', 'reference', 'bank_name', 'sender_phone', 'img', 'moneda', 'status']
-        read_only_fields = ('status', 'user',)
+        read_only_fields = ('status',)
 
     def create(self, validated_data):
         caja_instance = validated_data['cajaid']
