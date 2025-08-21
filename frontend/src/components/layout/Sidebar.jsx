@@ -1,10 +1,10 @@
 import { useState, useEffect} from 'react'
-import { Home, CreditCard, User, Package, Users, BarChart3, X, Settings } from 'lucide-react'
+import { Home, CreditCard, User, Package, Users, BarChart3, X, Settings, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { useLocation, Link } from 'react-router-dom'
 import "./stlyingresponsive.css"
 
 
-const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
+const Sidebar = ({ isOpen, onClose, isAdmin = false, isCollapsed, onToggleCollapse }) => {
   const location = useLocation()
 
   // Bloquear scroll del body cuando la sidebar está abierta (solo en móvil)
@@ -48,25 +48,36 @@ const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
       )}
 
       {/* Sidebar */}
-   <div className={`
-  absolute left-0 top-0 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out z-50
-  ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-  lg:translate-x-0 lg:static lg:h-screen lg:z-auto
-`}>
+      <div className={`
+        fixed left-0 top-0 bg-gray-900 text-white h-screen transform transition-all duration-300 ease-in-out z-50
+        ${isCollapsed ? 'w-20' : 'w-64'}
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0
+      `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CL</span>
+        <div className={`flex items-center justify-between border-b border-gray-700 h-16 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+            <div className="flex items-center overflow-hidden">
+                <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm">CL</span>
+                </div>
+                <span className={`font-bold whitespace-nowrap ml-2 ${isCollapsed ? 'hidden' : 'inline'}`}>Clappy</span>
             </div>
-            <span className="font-bold">Clappy</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-md hover:bg-gray-700 lg:hidden"
-          >
-            <X className="h-5 w-5" />
-          </button>
+            
+            <div>
+                <button
+                    onClick={onToggleCollapse}
+                    className="hidden lg:block p-1 rounded-md hover:bg-gray-700"
+                    title={isCollapsed ? 'Expandir' : 'Contraer'}
+                >
+                    {isCollapsed ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
+                </button>
+                <button
+                    onClick={onClose}
+                    className="p-1 rounded-md hover:bg-gray-700 lg:hidden"
+                >
+                    <X className="h-5 w-5" />
+                </button>
+            </div>
         </div>
 
         {/* Navigation */}
@@ -81,16 +92,18 @@ const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
                   <Link
                     to={item.path}
                     onClick={onClose}
+                    title={isCollapsed ? item.label : ''}
                     className={`
                       flex items-center space-x-3 px-3 py-2 rounded-md transition-colors duration-200
+                      ${isCollapsed ? 'justify-center' : ''}
                       ${isActive 
                         ? 'bg-red-600 text-white' 
                         : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                       }
                     `}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <span className={`whitespace-nowrap ${isCollapsed ? 'hidden' : 'inline'}`}>{item.label}</span>
                   </Link>
                 </li>
               )
@@ -100,9 +113,9 @@ const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
 
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700">
-          <div className="text-xs text-gray-400 text-center">
-            © 2024 Caja Clap System
-          </div>
+            <div className={`text-xs text-gray-400 text-center whitespace-nowrap ${isCollapsed ? 'hidden' : 'block'}`}>
+                © 2024 Caja Clap System
+            </div>
         </div>
       </div>
     </>

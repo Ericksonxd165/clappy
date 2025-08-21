@@ -4,22 +4,25 @@ import Sidebar from './Sidebar'
 
 const UIlayout = ({ children, isAdmin = false }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
-        onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+      <Sidebar 
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
         isAdmin={isAdmin}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       
-      <div className="flex">
-        <Sidebar 
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
+        <Header 
+          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           isAdmin={isAdmin}
         />
         
-        <main className="flex-1 lg:ml-0">
+        <main>
           <div className="p-4 lg:p-6">
             {children}
           </div>
