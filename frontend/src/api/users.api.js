@@ -60,4 +60,8 @@ api.interceptors.response.use(
   export const updateUser = (id, userData) => api.put(`users/${id}/`, userData);
   export const deleteUser = (id) => api.delete(`users/${id}/`);
 
+  // Password Reset
+  export const requestPasswordReset = (email) => api.post('password-reset/', email);
+  export const confirmPasswordReset = (uidb64, token, password) => api.post(`password-reset-confirm/${uidb64}/${token}/`, password);
+
   export default api;

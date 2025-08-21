@@ -80,7 +80,18 @@ const PaymentHistory = () => {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
+    const statusTranslations = {
+      APPROVED: 'Aprobado',
+      REJECTED: 'Rechazado',
+      PENDING: 'Pendiente'
+    };
+
+    doc.setFontSize(18);
+    doc.setTextColor(40);
+    doc.text("Historial de Pagos", 14, 22);
+
     autoTable(doc, {
+      startY: 30,
       head: [['ID', 'Fecha', 'Monto (USD)', 'Monto (Bs)', 'Método', 'Referencia', 'Estado']],
       body: filteredPayments.map(p => [
         p.id,
@@ -89,8 +100,11 @@ const PaymentHistory = () => {
         dollarRate ? `Bs. ${(p.amount * dollarRate).toFixed(2)}` : 'N/A',
         p.payment_method,
         p.reference || 'N/A',
-        p.status
+        statusTranslations[p.status] || p.status
       ]),
+      headStyles: {
+        fillColor: [220, 38, 38] // Red color for header
+      },
     });
     doc.save('historial_pagos.pdf');
   };

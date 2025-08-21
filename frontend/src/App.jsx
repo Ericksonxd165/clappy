@@ -10,6 +10,7 @@ import ClientLogin from './pages/client/Login'
 import ClientRegister from './pages/client/Register'
 import PaymentHistory from "./pages/client/PaymentHistory"
 import ClientForgotPassword from './pages/client/ForgotPassword'
+import ClientResetPassword from './pages/client/ResetPassword'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard'
@@ -107,6 +108,7 @@ const AppContent = () => {
             <Route path="/login" element={<ClientLogin />} />
             <Route path="/register" element={<ClientRegister />} />
             <Route path="/forgot-password" element={<ClientForgotPassword />} />
+            <Route path="/reset-password/:uidb64/:token" element={<ClientResetPassword />} />
             
             {/* Client Routes */}
             <Route path="/" element={<PrivateRoute clientOnly><ClientLayout /></PrivateRoute>}>

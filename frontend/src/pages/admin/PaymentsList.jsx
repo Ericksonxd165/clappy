@@ -164,8 +164,19 @@ const AdminPaymentsList = () => {
   }
 
   const exportToPDF = () => {
-    const doc = new jsPDF()
+    const doc = new jsPDF();
+    const statusTranslations = {
+      APPROVED: 'Aprobado',
+      REJECTED: 'Rechazado',
+      PENDING: 'Pendiente'
+    };
+
+    doc.setFontSize(18);
+    doc.setTextColor(40);
+    doc.text("Reporte de Pagos", 14, 22);
+
     autoTable(doc, {
+      startY: 30,
       head: [['ID', 'Usuario', 'Email', 'Referencia', 'Monto (USD)', 'Monto (Bs)', 'Fecha', 'Estado']],
       body: filteredPayments.map(p => [
         p.id,
@@ -175,10 +186,13 @@ const AdminPaymentsList = () => {
         `$${p.amount}`,
         dollarRate ? `Bs. ${(p.amount * dollarRate).toFixed(2)}` : 'N/A',
         new Date(p.date).toLocaleDateString(),
-        p.status,
+        statusTranslations[p.status] || p.status,
       ]),
-    })
-    doc.save('pagos.pdf')
+      headStyles: {
+        fillColor: [220, 38, 38] // Red color for header
+      },
+    });
+    doc.save('pagos.pdf');
   }
 
   if (loading) {

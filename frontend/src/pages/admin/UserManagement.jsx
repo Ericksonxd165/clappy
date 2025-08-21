@@ -96,20 +96,12 @@ const UserManagement = () => {
   const exportToPDF = () => {
     const doc = new jsPDF();
 
-    // Add header
-    doc.setFontSize(20);
+    doc.setFontSize(18);
+    doc.setTextColor(40);
     doc.text("Reporte de Usuarios", 14, 22);
-    doc.setFontSize(12);
-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
 
-    // Add branding
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text("Mi Aplicación de Cajas", 150, 22);
-
-    // Add table
     autoTable(doc, {
-      startY: 40,
+      startY: 30,
       head: [['ID', 'Nombre Completo', 'Email', 'Cédula', 'Teléfono', 'Dirección']],
       body: users.map(user => [
         user.id,
@@ -119,6 +111,9 @@ const UserManagement = () => {
         user.phone,
         user.address || 'N/A'
       ]),
+      headStyles: {
+        fillColor: [220, 38, 38] // Red color for header
+      },
     });
 
     doc.save('reporte_usuarios.pdf');
