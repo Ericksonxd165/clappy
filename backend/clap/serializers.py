@@ -1,6 +1,11 @@
 from rest_framework import serializers
-from .models import caja, cajaPersona, Notification, PagoMovilConfig
+from .models import caja, cajaPersona, Notification, PagoMovilConfig, SupportConfig
 from users.serializer import UserSerializer
+
+class SupportConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupportConfig
+        fields = '__all__'
 
 class CajaSerializer(serializers.ModelSerializer):
     sold = serializers.IntegerField(read_only=True)

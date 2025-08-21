@@ -1,5 +1,5 @@
 import { useState, useEffect} from 'react'
-import { Home, CreditCard, User, Package, Users, BarChart3, X } from 'lucide-react'
+import { Home, CreditCard, User, Package, Users, BarChart3, X, Settings } from 'lucide-react'
 import { useLocation, Link } from 'react-router-dom'
 import "./stlyingresponsive.css"
 
@@ -32,6 +32,7 @@ const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
     { icon: CreditCard, label: 'Lista de Pagos', path: '/admin/payments' },
     { icon: Package, label: 'Gestión de Cajas', path: '/admin/stock' },
     { icon: Users, label: 'Gestión de Usuarios', path: '/admin/users' },
+    { icon: Settings, label: 'Soporte', path: '/admin/support' },
   ]
 
   const menuItems = isAdmin ? adminMenuItems : clientMenuItems
@@ -50,8 +51,7 @@ const Sidebar = ({ isOpen, onClose, isAdmin = false }) => {
    <div className={`
   absolute left-0 top-0 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out z-50
   ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-  sm:fixed sm:h-120 
-  lg:translate-x-0 lg:static lg:h-auto lg:z-auto    idkwtfisthis
+  lg:translate-x-0 lg:static lg:h-screen lg:z-auto
 `}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">

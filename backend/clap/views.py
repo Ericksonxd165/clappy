@@ -7,8 +7,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from .models import caja, cajaPersona, Notification, PagoMovilConfig
-from .serializers import CajaSerializer, CajaPersonaSerializer, NotificationSerializer, PagoMovilConfigSerializer
+from .models import caja, cajaPersona, Notification, PagoMovilConfig, SupportConfig
+from .serializers import CajaSerializer, CajaPersonaSerializer, NotificationSerializer, PagoMovilConfigSerializer, SupportConfigSerializer
 from users.models import UsersCustom
 from rest_framework import serializers
 
@@ -98,6 +98,9 @@ class CajaViewSet(viewsets.ModelViewSet):
 
             # Delete all existing boxes
             caja.objects.all().delete()
+
+            # Delete all notifications
+            Notification.objects.all().delete()
 
             # Create a new box for the new season
             new_caja = caja.objects.create(
@@ -195,7 +198,14 @@ class CajaPersonaViewSet(viewsets.ModelViewSet):
         caja_persona = self.get_object()
         caja_persona.status = 'REJECTED'
         caja_persona.save()
-        Notification.objects.create(user=caja_persona.user, message="Tu pago ha sido rechazado.")
+
+        support_config, created = SupportConfig.objects.get_or_create(id=1)
+        support_email = support_config.email
+        support_phone = support_config.phone_number
+
+        message = f"Tu pago ha sido rechazado. Si crees que esto es un error, por favor contacta a soporte: {support_email} o {support_phone}"
+        Notification.objects.create(user=caja_persona.user, message=message)
+
         return Response({'status': 'Payment rejected'})
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
@@ -211,7 +221,7 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
+        return Notification.objects.filter(user=self.request.user).order_by('-timestamp')
 
     @action(detail=True, methods=['post'])
     def mark_as_read(self, request, pk=None):
@@ -257,6 +267,32 @@ class PagoMovilConfigViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)
         return Response(serializer.data)
 
+
+class SupportConfigViewSet(viewsets.ModelViewSet):
+    queryset = SupportConfig.objects.all()
+    serializer_class = SupportConfigSerializer
+    permission_classes = [IsAdminUser]
+
+    def list(self, request, *args, **kwargs):
+        config, created = SupportConfig.objects.get_or_create(
+            id=1,
+            defaults={'email': 'support@example.com', 'phone_number': '1234567890'}
+        )
+        serializer = self.get_serializer(config)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        instance = SupportConfig.objects.first()
+        if not instance:
+            instance = SupportConfig.objects.create(email="support@example.com", phone_number="1234567890")
+
+        serializer = self.get_serializer(instance, data=request.data, partial=kwargs.pop('partial', False))
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
 def get_dollar_rate(request):
     try:

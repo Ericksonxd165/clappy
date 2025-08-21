@@ -73,8 +73,8 @@ const UserManagement = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['ID', 'Username', 'Email', 'Is Admin'];
-    const rows = users.map(user => [user.id, user.username, user.email, user.is_staff]);
+    const headers = ['ID', 'Username', 'Email', 'Address', 'Is Admin'];
+    const rows = users.map(user => [user.id, user.username, user.email, user.address, user.is_staff]);
     let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
     var encodedUri = encodeURI(csvContent);
     var link = document.createElement("a");
@@ -139,6 +139,7 @@ const UserManagement = () => {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cédula</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
@@ -155,6 +156,7 @@ const UserManagement = () => {
                   <div className="text-sm text-gray-900">{user.email}</div>
                   <div className="text-sm text-gray-500">{user.phone}</div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.address}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.cedula}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_staff ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>

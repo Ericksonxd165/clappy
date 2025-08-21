@@ -46,4 +46,7 @@ export const getDollarRate = () => api.get('/dollar-rate/');
 
 export const clearSeasonData = (data) => api.post('/cajas/clear_season_data/', data);
 
+export const getSupportConfig = () => api.get('/support-config/');
+export const updateSupportConfig = (id, data) => api.put(`/support-config/${id}/`, data);
+
 export default api

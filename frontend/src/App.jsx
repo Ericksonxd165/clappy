@@ -16,6 +16,7 @@ import AdminDashboard from './pages/admin/Dashboard'
 import AdminPaymentsList from './pages/admin/PaymentsList'
 import AdminStock from './pages/admin/Stock'
 import UserManagement from './pages/admin/UserManagement'
+import AdminSupportConfig from './pages/admin/SupportConfig'
 import AdminLayout from './components/layout/AdminLayout'
 import ClientLayout from './components/layout/ClientLayout'
 
@@ -121,6 +122,7 @@ const AppContent = () => {
                 <Route path="payments" element={<AdminPaymentsList />} />
                 <Route path="stock" element={<AdminStock />} />
                 <Route path="users" element={<UserManagement />} />
+                <Route path="support" element={<AdminSupportConfig />} />
             </Route>
             
             {/* Default redirect */}

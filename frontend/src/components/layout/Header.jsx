@@ -42,7 +42,7 @@ const Header = ({ onMenuToggle, isAdmin = false }) => {
   const unreadNotificationsCount = notifications.filter(n => !n.read).length
 
   return (
-    <header className="bg-white shadow-lg border-b-2 border-red-600 fixx">
+    <header className="bg-white shadow-lg border-b-2 border-red-600 sticky top-0 z-40">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side - Menu button and Logo */}
         <div className="flex items-center space-x-4">

@@ -66,3 +66,10 @@ class PagoMovilConfig(models.Model):
 
     def __str__(self):
         return f"Configuración de Pago Móvil ({self.banco})"
+
+class SupportConfig(models.Model):
+    email = models.EmailField()
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+
+    def __str__(self):
+        return f"Configuración de Soporte ({self.email})"

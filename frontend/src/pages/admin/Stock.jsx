@@ -105,7 +105,7 @@ const AdminStock = () => {
     setIsUpdatingPrice(true)
     try {
       await updateCaja(caja.id, { ...caja, price: newPrice })
-      await fetchCaja() // Refetch to get the latest data
+      await fetchPageData() // Refetch to get the latest data
       alert('Precio actualizado exitosamente')
     } catch (error) {
       alert('Error al actualizar el precio')
@@ -127,7 +127,7 @@ const AdminStock = () => {
     setIsUpdatingStock(true)
     try {
       await updateCaja(caja.id, { ...caja, stock: newStock })
-      await fetchCaja() // Refetch to get the latest data
+      await fetchPageData() // Refetch to get the latest data
       setStockAdjustment(0)
       alert('Stock actualizado exitosamente')
     } catch (error) {
@@ -140,7 +140,7 @@ const AdminStock = () => {
   const handleTogglePayments = async () => {
     try {
       await updateCaja(caja.id, { ...caja, payments_enabled: !caja.payments_enabled })
-      await fetchCaja()
+      await fetchPageData()
       alert('Estado de los pagos actualizado')
     } catch (error) {
       alert('Error al actualizar el estado de los pagos')
@@ -213,7 +213,7 @@ const AdminStock = () => {
         setIsSeasonModalOpen(false);
         setNewSeasonPrice('');
         setNewSeasonStock('');
-        await fetchCaja(); // Refresh all data
+        await fetchPageData(); // Refresh all data
       } catch (error) {
         alert("Error al iniciar la nueva temporada.");
         console.error(error);

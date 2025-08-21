@@ -131,7 +131,7 @@ const AdminPaymentsList = () => {
   }
 
   const showReceipt = (receipt) => {
-    const imageUrl = `${import.meta.env.VITE_BASE_API_URL}${receipt}`
+    const imageUrl = receipt
     setSelectedReceipt(imageUrl)
     setShowReceiptModal(true)
   }

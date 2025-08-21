@@ -7,6 +7,7 @@ router.register(r'cajas', views.CajaViewSet, basename='caja')
 router.register(r'cajaspersona', views.CajaPersonaViewSet, basename='cajapersona')
 router.register(r'notifications', views.NotificationViewSet, basename='notification')
 router.register(r'pago-movil-config', views.PagoMovilConfigViewSet, basename='pagomovilconfig')
+router.register(r'support-config', views.SupportConfigViewSet, basename='supportconfig')
 
 urlpatterns = [
     path('cajas/payment-details/', views.CajaViewSet.as_view({'get': 'payment_details'}), name='caja-payment-details'),

@@ -24,30 +24,30 @@ const paymentSchema = z.object({
       .regex(phoneRegex, 'El formato del teléfono no es válido (04XX-XXXXXXX)')
       .optional(),
     receipt: z.any().optional()
-  }).refine(data => {
+  }).superRefine((data, ctx) => {
     if (data.paymentMethod === 'mobile') {
-      return !!data.reference && data.reference.length > 0;
+      if (!data.reference || data.reference.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'El número de referencia es requerido para Pago Móvil',
+          path: ['reference'],
+        });
+      }
+      if (!data.bank_name || data.bank_name.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'El banco emisor es requerido para Pago Móvil',
+          path: ['bank_name'],
+        });
+      }
+      if (!data.sender_phone || data.sender_phone.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'El número de teléfono del emisor es requerido para Pago Móvil',
+          path: ['sender_phone'],
+        });
+      }
     }
-    return true;
-  }, {
-    message: 'El número de referencia es requerido para Pago Móvil',
-    path: ['reference'],
-  }).refine(data => {
-    if (data.paymentMethod === 'mobile') {
-      return !!data.bank_name && data.bank_name.length > 0;
-    }
-    return true;
-  }, {
-    message: 'El banco emisor es requerido para Pago Móvil',
-    path: ['bank_name'],
-  }).refine(data => {
-    if (data.paymentMethod === 'mobile') {
-      return !!data.sender_phone && data.sender_phone.length > 0;
-    }
-    return true;
-  }, {
-    message: 'El número de teléfono del emisor es requerido para Pago Móvil',
-    path: ['sender_phone'],
   });
 
 
