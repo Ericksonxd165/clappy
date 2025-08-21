@@ -110,6 +110,7 @@ const AppContent = () => {
             
             {/* Client Routes */}
             <Route path="/" element={<PrivateRoute clientOnly><ClientLayout /></PrivateRoute>}>
+                <Route path="" element={<ClientDashboard />} />
                 <Route path="dashboard" element={<ClientDashboard />} />
                 <Route path="payment" element={<ClientPayment />} />
                 <Route path="profile" element={<ClientProfile />} />
