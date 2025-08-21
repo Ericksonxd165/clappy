@@ -4,7 +4,7 @@ import { Card, CardContent } from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
 import { Download, FileText, Calendar } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const PaymentHistory = () => {
   const [payments, setPayments] = useState([]);
@@ -80,7 +80,7 @@ const PaymentHistory = () => {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    doc.autoTable({
+    autoTable(doc, {
       head: [['ID', 'Fecha', 'Monto (USD)', 'Monto (Bs)', 'Método', 'Referencia', 'Estado']],
       body: filteredPayments.map(p => [
         p.id,

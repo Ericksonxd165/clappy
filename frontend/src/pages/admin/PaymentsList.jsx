@@ -5,7 +5,7 @@ import Button from '../../components/UI/Button'
 import { Search, CheckCircle, X, Eye, ChevronLeft, ChevronRight, Download, CreditCard } from 'lucide-react'
 import { getCajaPersonas, approvePayment, rejectPayment, confirmDelivery, getDollarRate } from '../../api/box.api'
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 
 const AdminPaymentsList = () => {
   const [payments, setPayments] = useState([])
@@ -165,7 +165,7 @@ const AdminPaymentsList = () => {
 
   const exportToPDF = () => {
     const doc = new jsPDF()
-    doc.autoTable({
+    autoTable(doc, {
       head: [['ID', 'Usuario', 'Email', 'Referencia', 'Monto (USD)', 'Monto (Bs)', 'Fecha', 'Estado']],
       body: filteredPayments.map(p => [
         p.id,
