@@ -181,7 +181,7 @@ const ClientPayment = () => {
                         </div>
                       </button>
                       <button
-                        type="button"
+                        type="submit"
                         onClick={() => setValue('paymentMethod', 'cash')}
                         className={`p-4 border-2 rounded-lg flex items-center space-x-3 transition-colors ${paymentMethod === 'cash' ? 'border-red-600 bg-red-50' : 'border-gray-300 hover:border-gray-400'}`}
                       >
@@ -256,9 +256,11 @@ const ClientPayment = () => {
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full" disabled={loading || !caja || paymentsDisabled}> {/* Added paymentsDisabled */}
-                    {loading ? 'Enviando...' : `Confirmar Pago de $${caja?.price || '...'}`}
-                  </Button>
+                  {paymentMethod !== 'cash' && (
+                    <Button type="submit" className="w-full" disabled={loading || !caja || paymentsDisabled}>
+                      {loading ? 'Enviando...' : `Confirmar Pago de $${caja?.price || '...'}`}
+                    </Button>
+                  )}
                 </form>
               </CardContent>
             </Card>
