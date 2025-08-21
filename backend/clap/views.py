@@ -216,6 +216,68 @@ class CajaPersonaViewSet(viewsets.ModelViewSet):
         Notification.objects.create(user=caja_persona.user, message="La entrega de tu caja ha sido confirmada.")
         return Response({'status': 'Delivery confirmed'})
 
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def admin_create_payment(self, request):
+        user_id = request.data.get('user_id')
+        payment_method = request.data.get('payment_method')
+
+        if not user_id or not payment_method:
+            return Response(
+                {"error": "User ID and payment method are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = UsersCustom.objects.get(id=user_id)
+        except UsersCustom.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        main_caja = caja.objects.order_by('-date').first()
+        if not main_caja:
+            return Response(
+                {"error": "No hay una caja principal disponible."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        existing_payment = cajaPersona.objects.filter(
+            user=user,
+            cajaid=main_caja,
+            status__in=['PENDING', 'APPROVED']
+        ).exists()
+
+        if existing_payment:
+            return Response(
+                {"error": "El usuario ya tiene un pago registrado para la caja de esta temporada."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if main_caja.stock <= 0:
+            return Response(
+                {"error": "No hay stock disponible."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Prepare data for the serializer
+        payment_data = {
+            'cajaid': main_caja.id,
+            'user': user.id,
+            'payment_method': payment_method,
+            'amount': main_caja.price,
+            'status': 'APPROVED' # Admin-created payments are auto-approved
+        }
+
+        serializer = self.get_serializer(data=payment_data)
+        serializer.is_valid(raise_exception=True)
+
+        main_caja.stock -= 1
+        main_caja.save()
+
+        serializer.save(user=user, cajaid=main_caja)
+
+        Notification.objects.create(user=user, message=f"Un administrador ha registrado un pago de '{payment_method}' para tu caja.")
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]

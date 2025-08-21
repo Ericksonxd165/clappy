@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/Layout';
 import { listUsers, deleteUser, createUser, updateUser } from '../../api/users.api';
 import Button from '../../components/UI/Button';
-import { Edit, Trash, Plus, Download } from 'lucide-react';
+import { Edit, Trash, Plus, Download, DollarSign } from 'lucide-react';
 import UserEditModal from '../../components/admin/UserEditModal';
+import AdminRegisterPaymentModal from '../../components/admin/AdminRegisterPaymentModal';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -12,6 +13,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
@@ -40,6 +42,12 @@ const UserManagement = () => {
   const handleCloseModal = () => {
     setSelectedUser(null);
     setIsModalOpen(false);
+    setIsPaymentModalOpen(false);
+  };
+
+  const handleOpenPaymentModal = (user) => {
+    setSelectedUser(user);
+    setIsPaymentModalOpen(true);
   };
 
   const handleSaveUser = async (data) => {
@@ -164,7 +172,10 @@ const UserManagement = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Button variant="icon" onClick={() => handleOpenModal(user)} className="text-blue-600 hover:text-blue-900">
+                  <Button variant="icon" onClick={() => handleOpenPaymentModal(user)} className="text-green-600 hover:text-green-900">
+                    <DollarSign className="h-5 w-5" />
+                  </Button>
+                  <Button variant="icon" onClick={() => handleOpenModal(user)} className="text-blue-600 hover:text-blue-900 ml-2">
                     <Edit className="h-5 w-5" />
                   </Button>
                   <Button variant="icon" onClick={() => handleDeleteUser(user.id)} className="text-red-600 hover:text-red-900 ml-2">
@@ -183,6 +194,18 @@ const UserManagement = () => {
           onClose={handleCloseModal}
           user={selectedUser}
           onSave={handleSaveUser}
+        />
+      )}
+
+      {isPaymentModalOpen && (
+        <AdminRegisterPaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={handleCloseModal}
+          user={selectedUser}
+          onPaymentRegistered={() => {
+            fetchUsers();
+            handleCloseModal();
+          }}
         />
       )}
     </Layout>
