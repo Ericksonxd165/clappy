@@ -58,7 +58,7 @@ Sigue estos pasos para levantar el entorno de desarrollo local.
 
 1.  **Clona el repositorio:**
     ```bash
-    git clone <URL_DEL_REPOSITORIO>
+    git clone https://github.com/Ericksonxd165/clappy/
     cd clappy
     ```
 
