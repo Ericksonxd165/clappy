@@ -9,6 +9,7 @@ import Input from '../../components/UI/Input'
 import { Package, DollarSign, Plus, Minus, Save, History, TrendingUp, AlertTriangle, RefreshCw } from 'lucide-react'
 import { getCaja, updateCaja, createCaja, getPagoMovilConfig, updatePagoMovilConfig, clearSeasonData, getDollarRate } from '../../api/box.api'
 import { venezuelanBanks, handleNumericInput, phoneRegex, cedulaRegex } from '../../utils/validations'
+import {MoonLoader} from 'react-spinners'
 
 const pagoMovilSchema = z.object({
   cedula: z.string().regex(cedulaRegex, 'La cédula debe tener entre 7 y 8 dígitos numéricos'),
@@ -175,7 +176,13 @@ const AdminStock = () => {
   const stockStatus = caja ? getStockStatus(caja) : { color: '', bg: '', status: 'N/A' };
 
   if (loading) {
-    return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Layout>
+    return <Layout isAdmin={true}><div style={{display:"flex", justifyContent:"center", alignItems:"center",minHeight:"100vh"}} >
+      <MoonLoader 
+       color={"red"}
+       size={60}
+       loading={true}
+      />
+    </div>;</Layout>
   }
 
   if (error) {

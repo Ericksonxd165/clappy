@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useState, createContext, useContext , useEffect} from 'react'
 import { getCurrentUser } from './api/users.api'
+import {MoonLoader} from 'react-spinners'
 
 // Client Pages
 import ClientDashboard from './pages/client/Dashboard'
@@ -97,7 +98,13 @@ const AppContent = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>; // Or a more sophisticated loading spinner
+    return <div style={{display:"flex", justifyContent:"center", alignItems:"center",minHeight:"100vh"}} >
+      <MoonLoader 
+       color={"red"}
+       size={60}
+       loading={true}
+      />
+    </div>; // Or a more sophisticated loading spinner
   }
 
   return (

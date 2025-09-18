@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Menu, X, User, LogOut, Bell } from 'lucide-react'
 import { useAuth } from '../../App'
 import { getNotifications, markNotificationAsRead } from '../../api/box.api'
+import {Link} from 'react-router-dom'
 import "./stlyingresponsive.css"
 
 const Header = ({ onMenuToggle, isAdmin = false }) => {
@@ -78,7 +79,7 @@ const Header = ({ onMenuToggle, isAdmin = false }) => {
               )}
             </button>
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50 max-h-96 overflow-y-auto">
+              <div className="absolute right-0 mt-2 w-70 sm:w-80 bg-white rounded-md shadow-lg py-1 z-50 max-h-96 overflow-y-auto">
                 <div className="px-4 py-2 font-bold text-gray-700">Notificaciones</div>
                 {notifications.length > 0 ? (
                   notifications.map(n => (
@@ -116,12 +117,14 @@ const Header = ({ onMenuToggle, isAdmin = false }) => {
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                 {!isAdmin && (
-                  <a
-                    href="/profile"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Mi Perfil
-                  </a>
+                  <Link to="/profile">
+
+                   <div className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">      Mi Perfil </div>  
+                  
+               
+                  </Link>
+                 
+                  
                 )}
                 <button
                   onClick={logout}

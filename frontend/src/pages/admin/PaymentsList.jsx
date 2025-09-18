@@ -6,6 +6,7 @@ import { Search, CheckCircle, X, Eye, ChevronLeft, ChevronRight, Download, Credi
 import { getCajaPersonas, approvePayment, rejectPayment, confirmDelivery, getDollarRate } from '../../api/box.api'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import {MoonLoader} from 'react-spinners'
 
 const AdminPaymentsList = () => {
   const [payments, setPayments] = useState([])
@@ -196,7 +197,13 @@ const AdminPaymentsList = () => {
   }
 
   if (loading) {
-    return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Layout>
+    return <Layout isAdmin={true}><div style={{display:"flex", justifyContent:"center", alignItems:"center",minHeight:"100vh"}} >
+      <MoonLoader 
+       color={"red"}
+       size={60}
+       loading={true}
+      />
+    </div>;</Layout>
   }
 
   if (error) {
@@ -241,7 +248,7 @@ const AdminPaymentsList = () => {
                 </select>
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center flex-wrap justify-start gap-2 lg:justify-end">
                 <Button onClick={exportToCSV} variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
                   Exportar CSV
@@ -253,7 +260,7 @@ const AdminPaymentsList = () => {
 
                 {/* Bulk Actions */}
                 {selectedPayments.length > 0 && (
-                  <div className="flex space-x-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       size="sm"
                       onClick={() => handleBulkAction('approve')}

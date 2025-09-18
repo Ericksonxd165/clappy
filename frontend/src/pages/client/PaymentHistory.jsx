@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { getCajaPersonas, getDollarRate } from '../../api/box.api';
 import { Card, CardContent } from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
-import { Download, FileText, Calendar } from 'lucide-react';
+import { Download, FileText, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import {MoonLoader} from 'react-spinners'
 
 const PaymentHistory = () => {
   const [payments, setPayments] = useState([]);
@@ -12,6 +13,7 @@ const PaymentHistory = () => {
   const [error, setError] = useState(null);
   const [dollarRate, setDollarRate] = useState(null);
   const [filter, setFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,7 +23,7 @@ const PaymentHistory = () => {
           getCajaPersonas(),
           getDollarRate()
         ]);
-        setPayments(paymentsRes.data);
+        setPayments(paymentsRes.data.sort((a, b) => new Date(b.date) - new Date(a.date)));
         setDollarRate(rateRes.data.rate);
       } catch (err) {
         setError('Error al cargar el historial de pagos.');
@@ -54,6 +56,13 @@ const PaymentHistory = () => {
     return paymentDate.getFullYear() === parseInt(year) && (paymentDate.getMonth() + 1) === parseInt(month);
   });
 
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  const paginatedPayments = filteredPayments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const exportToCSV = () => {
     const headers = ['ID', 'Fecha', 'Monto (USD)', 'Monto (Bs)', 'Método', 'Referencia', 'Estado'];
     const rows = filteredPayments.map(p => [
@@ -67,8 +76,7 @@ const PaymentHistory = () => {
     ].map(field => `"${String(field).replace(/"/g, '""')}"`));
 
     let csvContent = "data:text/csv;charset=utf-8,"
-        + headers.join(",") + "\n"
-        + rows.map(e => e.join(",")).join("\n");
+        + headers.join(",") + "" + rows.map(e => e.join(",")).join("");
 
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csvContent));
@@ -109,7 +117,13 @@ const PaymentHistory = () => {
     doc.save('historial_pagos.pdf');
   };
 
-  if (loading) return <div>Cargando historial...</div>;
+  if (loading) return <div style={{display:"flex", justifyContent:"center", alignItems:"center",minHeight:"100vh"}} >
+      <MoonLoader 
+       color={"red"}
+       size={60}
+       loading={true}
+      />
+    </div>;;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
@@ -120,26 +134,28 @@ const PaymentHistory = () => {
       </div>
 
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-gray-500" />
-              <input
-                type="month"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="border border-gray-300 rounded-md p-2"
-              />
-            </div>
-            <div className="flex gap-4">
-              <Button onClick={exportToCSV} variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar CSV
-              </Button>
-              <Button onClick={exportToPDF} variant="outline" size="sm">
-                <FileText className="h-4 w-4 mr-2" />
-                Exportar PDF
-              </Button>
+        <CardContent className="p-0">
+          <div className="p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-gray-500" />
+                <input
+                  type="month"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="flex gap-4">
+                <Button onClick={exportToCSV} variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar CSV
+                </Button>
+                <Button onClick={exportToPDF} variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Exportar PDF
+                </Button>
+              </div>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -154,8 +170,8 @@ const PaymentHistory = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredPayments.length > 0 ? (
-                  filteredPayments.map(payment => (
+                {paginatedPayments.length > 0 ? (
+                  paginatedPayments.map(payment => (
                     <tr key={payment.id}>
                       <td className="px-6 py-4">{new Date(payment.date).toLocaleDateString()}</td>
                       <td className="px-6 py-4">
@@ -177,6 +193,40 @@ const PaymentHistory = () => {
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredPayments.length)} de {filteredPayments.length} resultados
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`px-3 py-1 border rounded-md ${currentPage === i + 1 ? 'bg-red-600 text-white border-red-600' : 'border-gray-300 hover:bg-gray-50'}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

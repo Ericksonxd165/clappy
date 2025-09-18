@@ -8,6 +8,7 @@ import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { User, Mail, Phone, MapPin, Save, Edit3 } from 'lucide-react';
 import { getCurrentUser, updateCurrentUser } from '../../api/users.api';
+import {MoonLoader} from 'react-spinners'
 
 const profileSchema = z.object({
   fullname: z.string().min(1, 'El nombre es requerido').regex(/^[a-zA-Z\s]+$/, 'El nombre solo puede contener letras'),
@@ -68,7 +69,13 @@ const ClientProfile = () => {
   };
 
   if (loading) {
-    return <Layout><div className="text-center p-8">Cargando perfil...</div></Layout>;
+    return <Layout><div style={{display:"flex", justifyContent:"center", alignItems:"center",minHeight:"100vh"}} >
+      <MoonLoader 
+       color={"red"}
+       size={60}
+       loading={true}
+      />
+    </div>;</Layout>;
   }
 
   if (error) {

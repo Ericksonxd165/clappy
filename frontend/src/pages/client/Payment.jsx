@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import Modal from '../../components/UI/Modal';
 import { toast } from 'react-hot-toast';
 import { venezuelanBanks, handleNumericInput, phoneRegex } from '../../utils/validations'; // Import venezuelanBanks and phoneRegex
+import {MoonLoader} from 'react-spinners'
 
 const paymentSchema = z.object({
     paymentMethod: z.enum(['mobile', 'cash']),
@@ -131,7 +132,13 @@ const ClientPayment = () => {
   const paymentsDisabled = caja && !caja.payments_enabled; // Check if caja is loaded before accessing payments_enabled
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Cargando...</div>;
+    return <div style={{display:"flex", justifyContent:"center", alignItems:"center",minHeight:"100vh"}} >
+      <MoonLoader 
+       color={"red"}
+       size={60}
+       loading={true}
+      />
+    </div>;;
   }
 
   if (serverError) {

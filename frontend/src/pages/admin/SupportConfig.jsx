@@ -8,7 +8,7 @@ import Button from '../../components/UI/Button'
 import Input from '../../components/UI/Input'
 import { Mail, Save } from 'lucide-react'
 import { getSupportConfig, updateSupportConfig } from '../../api/box.api'
-
+import {MoonLoader} from 'react-spinners'
 import { phoneRegex } from '../../utils/validations'
 
 const supportSchema = z.object({
@@ -63,7 +63,13 @@ const AdminSupportConfig = () => {
   };
 
   if (loading) {
-    return <Layout isAdmin={true}><div className="text-center p-8">Cargando...</div></Layout>
+    return <Layout isAdmin={true}><div style={{display:"flex", justifyContent:"center", alignItems:"center",minHeight:"100vh"}} >
+      <MoonLoader 
+       color={"red"}
+       size={60}
+       loading={true}
+      />
+    </div>;</Layout>
   }
 
   if (error) {

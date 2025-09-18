@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '../../components/UI/Ca
 import Button from '../../components/UI/Button'
 import { Package, DollarSign, CheckCircle, Clock ,CreditCard, User, TrendingUp, Users } from 'lucide-react'
 import { getCaja, getCajaPersonas } from '../../api/box.api'
+import {MoonLoader} from 'react-spinners'
 
 const AdminDashboard = () => {
   const [caja, setCaja] = useState(null)
@@ -52,7 +53,13 @@ const AdminDashboard = () => {
   const totalUsers = new Set(payments.map(p => p.user.id)).size; // Assuming user.id is unique
 
   if (loading) {
-    return <Layout isAdmin={true}><div className="text-center p-8">Cargando datos del Dashboard...</div></Layout>
+    return <Layout isAdmin={true}><div style={{display:"flex", justifyContent:"center", alignItems:"center",minHeight:"100vh"}} >
+      <MoonLoader 
+       color={"red"}
+       size={60}
+       loading={true}
+      />
+    </div>;</Layout>
   }
 
   if (error) {
